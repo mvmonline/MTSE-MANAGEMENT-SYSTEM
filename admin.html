@@ -6,6 +6,9 @@
     <title>MTSE Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore-compat.js"></script>
     <style>
         @media print {
             @page { size: A4; margin: 10mm; }
@@ -59,7 +62,6 @@
 
             <!-- Tab 2: Settings -->
             <div id="tab-settings" class="hidden bg-white p-4 md:p-6 rounded shadow">
-                
                 <h2 class="text-xl font-bold mb-4 border-b pb-2 text-blue-900">Application Open/Close Timings by Level</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-blue-50 p-4 rounded border">
                     <div><label class="block font-bold text-sm">Level I (Class I & II) - Open</label><input type="datetime-local" id="setL1Open" class="border p-2 w-full rounded"></div>
@@ -151,7 +153,20 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6K-sYXA16ZdzM90WCLiwe9T5Iav_63tveRNq15HwXcHB066C0xkp4LQjDSSV5yc7PoQ/exec"; 
+        // আপোনাৰ Firebase Config ইয়াত দিয়া হৈছে
+        const firebaseConfig = {
+            apiKey: "AIzaSyCG00CkuMozSfVCnB9qU42DsbLVmI3y9dg",
+            authDomain: "mtse2026-805a0.firebaseapp.com",
+            databaseURL: "https://mtse2026-805a0-default-rtdb.firebaseio.com",
+            projectId: "mtse2026-805a0",
+            storageBucket: "mtse2026-805a0.firebasestorage.app",
+            messagingSenderId: "641604091734",
+            appId: "1:641604091734:web:391d6501ea459bace0e0f7",
+            measurementId: "G-NP8PZXT8W0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let studentsData = [], appSettings = {};
 
         function login() {
@@ -169,28 +184,25 @@
         }
 
         async function loadData() {
-            document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center p-4">Loading Data...</td></tr>';
+            document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center p-4">Loading Data from Firebase...</td></tr>';
             try {
-                let resSet = await fetch(SCRIPT_URL + "?action=getSettings");
-                appSettings = await resSet.json();
-                updateUIVariables();
+                let doc = await db.collection("mtse_settings").doc("config").get();
+                if(doc.exists) { appSettings = doc.data(); updateUIVariables(); }
 
-                let resStu = await fetch(SCRIPT_URL + "?action=getStudents");
-                let rawData = await resStu.json();
-                if(rawData.length > 1) {
-                    studentsData = rawData.slice(1).map(r => { let o={}; rawData[0].forEach((h,i)=>o[h]=r[i]); return o; });
-                } else { studentsData = []; }
+                let snapshot = await db.collection("mtse_students").get();
+                studentsData = [];
+                snapshot.forEach(d => { studentsData.push(d.data()); });
                 renderTable(studentsData);
             } catch(e) { document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center p-4 text-red-500">Error loading data</td></tr>'; }
         }
 
         function updateUIVariables() {
-            document.querySelectorAll('.dyn-year').forEach(e => e.innerText = appSettings.year);
-            document.querySelectorAll('.dyn-date').forEach(e => e.innerText = appSettings.examDate);
-            document.querySelectorAll('.dyn-repTime').forEach(e => e.innerText = appSettings.reportingTime);
-            document.querySelectorAll('.dyn-exTime').forEach(e => e.innerText = appSettings.examTime);
-            document.querySelectorAll('.dyn-venue').forEach(e => e.innerText = appSettings.venue);
-            document.querySelectorAll('.dyn-address').forEach(e => e.innerText = appSettings.venueAddress);
+            document.querySelectorAll('.dyn-year').forEach(e => e.innerText = appSettings.year || '');
+            document.querySelectorAll('.dyn-date').forEach(e => e.innerText = appSettings.examDate || '');
+            document.querySelectorAll('.dyn-repTime').forEach(e => e.innerText = appSettings.reportingTime || '');
+            document.querySelectorAll('.dyn-exTime').forEach(e => e.innerText = appSettings.examTime || '');
+            document.querySelectorAll('.dyn-venue').forEach(e => e.innerText = appSettings.venue || '');
+            document.querySelectorAll('.dyn-address').forEach(e => e.innerText = appSettings.venueAddress || '');
             
             document.getElementById('setYear').value = appSettings.year || '';
             document.getElementById('setDate').value = appSettings.examDate || '';
@@ -199,16 +211,11 @@
             document.getElementById('setVenue').value = appSettings.venue || '';
             document.getElementById('setAddress').value = appSettings.venueAddress || '';
 
-            document.getElementById('setL1Open').value = appSettings.L1_open || '';
-            document.getElementById('setL1Close').value = appSettings.L1_close || '';
-            document.getElementById('setL2Open').value = appSettings.L2_open || '';
-            document.getElementById('setL2Close').value = appSettings.L2_close || '';
-            document.getElementById('setL3Open').value = appSettings.L3_open || '';
-            document.getElementById('setL3Close').value = appSettings.L3_close || '';
-            document.getElementById('setL4Open').value = appSettings.L4_open || '';
-            document.getElementById('setL4Close').value = appSettings.L4_close || '';
-            document.getElementById('setL5Open').value = appSettings.L5_open || '';
-            document.getElementById('setL5Close').value = appSettings.L5_close || '';
+            document.getElementById('setL1Open').value = appSettings.L1_open || ''; document.getElementById('setL1Close').value = appSettings.L1_close || '';
+            document.getElementById('setL2Open').value = appSettings.L2_open || ''; document.getElementById('setL2Close').value = appSettings.L2_close || '';
+            document.getElementById('setL3Open').value = appSettings.L3_open || ''; document.getElementById('setL3Close').value = appSettings.L3_close || '';
+            document.getElementById('setL4Open').value = appSettings.L4_open || ''; document.getElementById('setL4Close').value = appSettings.L4_close || '';
+            document.getElementById('setL5Open').value = appSettings.L5_open || ''; document.getElementById('setL5Close').value = appSettings.L5_close || '';
         }
 
         function renderTable(data) {
@@ -216,70 +223,73 @@
             if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">No records found.</td></tr>'; return; }
             
             data.forEach(s => {
-                let statusColor = s.Admit_Status === 'Released' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                let statusColor = s.admitStatus === 'Released' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
                 tbody.insertAdjacentHTML('beforeend', `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="p-2 md:p-3 font-bold">${s.Registration_No}</td>
-                    <td class="p-2 md:p-3 font-semibold uppercase">${s.Student_Name}</td>
-                    <td class="p-2 md:p-3">Class ${s.Class} (${s.Section})</td>
+                    <td class="p-2 md:p-3 font-bold">${s.regNo}</td>
+                    <td class="p-2 md:p-3 font-semibold uppercase">${s.studentName}</td>
+                    <td class="p-2 md:p-3">Class ${s.class} (${s.section})</td>
                     <td class="p-2 md:p-3 text-center">
-                        <select onchange="changeStatus('${s.Registration_No}', this.value)" class="border p-1 rounded text-xs md:text-sm font-bold outline-none ${statusColor}">
-                            <option value="Released" ${s.Admit_Status === 'Released' ? 'selected' : ''}>Released</option>
-                            <option value="Hold" ${s.Admit_Status === 'Hold' ? 'selected' : ''}>Hold</option>
+                        <select onchange="changeStatus('${s.regNo}', this.value)" class="border p-1 rounded text-xs md:text-sm font-bold outline-none ${statusColor}">
+                            <option value="Released" ${s.admitStatus === 'Released' ? 'selected' : ''}>Released</option>
+                            <option value="Hold" ${s.admitStatus === 'Hold' ? 'selected' : ''}>Hold</option>
                         </select>
                     </td>
-                    <td class="p-2 md:p-3 text-center"><button onclick="printAdmit('${s.Registration_No}')" class="bg-blue-900 text-white px-3 py-1 rounded shadow hover:bg-blue-800 text-sm">Print</button></td>
+                    <td class="p-2 md:p-3 text-center"><button onclick="printAdmit('${s.regNo}')" class="bg-blue-900 text-white px-3 py-1 rounded shadow hover:bg-blue-800 text-sm">Print</button></td>
                 </tr>`);
             });
         }
 
         function filterTable() {
             let q = document.getElementById('searchInput').value.toLowerCase();
-            renderTable(studentsData.filter(s => s.Student_Name.toLowerCase().includes(q) || s.Registration_No.toString().includes(q)));
+            renderTable(studentsData.filter(s => s.studentName.toLowerCase().includes(q) || s.regNo.toString().includes(q)));
         }
 
         async function changeStatus(regNo, newStatus) {
             try {
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "updateStatus", regNo: regNo, status: newStatus }) });
-                studentsData.find(s => s.Registration_No == regNo).Admit_Status = newStatus;
+                await db.collection("mtse_students").doc(regNo.toString()).update({ admitStatus: newStatus });
+                studentsData.find(s => s.regNo == regNo).admitStatus = newStatus;
                 renderTable(studentsData); 
             } catch(e) { alert("Error updating status"); }
         }
 
         function downloadCSV() {
             if(studentsData.length === 0) return alert("No data available.");
-            let csv = "Registration_No,Student_Name,Father_Name,Mother_Name,Gender,Class,Section,Roll_No,DOB,Level,Phone,Email,Admit_Status\n";
-            studentsData.forEach(r => { csv += `"${r.Registration_No}","${r.Student_Name}","${r.Father_Name}","${r.Mother_Name}","${r.Gender}","${r.Class}","${r.Section}","${r.Roll_No}","${r.DOB}","${r.Level}","${r.Phone}","${r.Email}","${r.Admit_Status}"\n`; });
+            let csv = "Reg_No,Student_Name,Father_Name,Mother_Name,Gender,Class,Section,Roll_No,DOB,Level,Phone,Email,Admit_Status\n";
+            studentsData.forEach(r => { csv += `"${r.regNo}","${r.studentName}","${r.fatherName}","${r.motherName}","${r.gender}","${r.class}","${r.section}","${r.rollNo}","${r.dob}","${r.level}","${r.phone}","${r.email}","${r.admitStatus}"\n`; });
             let blob = new Blob([csv], { type: 'text/csv' });
-            let link = document.createElement("a"); link.href = window.URL.createObjectURL(blob); link.download = `MTSE_Data_${appSettings.year}.csv`; link.click();
+            let link = document.createElement("a"); link.href = window.URL.createObjectURL(blob); link.download = `MTSE_Data.csv`; link.click();
         }
 
         async function saveSettings() {
-            let payload = {
-                action: "updateSettings",
-                settings: { 
-                    year: document.getElementById('setYear').value, examDate: document.getElementById('setDate').value, reportingTime: document.getElementById('setRepTime').value, examTime: document.getElementById('setExTime').value, venue: document.getElementById('setVenue').value, venueAddress: document.getElementById('setAddress').value,
-                    L1_open: document.getElementById('setL1Open').value, L1_close: document.getElementById('setL1Close').value,
-                    L2_open: document.getElementById('setL2Open').value, L2_close: document.getElementById('setL2Close').value,
-                    L3_open: document.getElementById('setL3Open').value, L3_close: document.getElementById('setL3Close').value,
-                    L4_open: document.getElementById('setL4Open').value, L4_close: document.getElementById('setL4Close').value,
-                    L5_open: document.getElementById('setL5Open').value, L5_close: document.getElementById('setL5Close').value
-                }
+            let payload = { 
+                year: document.getElementById('setYear').value, examDate: document.getElementById('setDate').value, reportingTime: document.getElementById('setRepTime').value, examTime: document.getElementById('setExTime').value, venue: document.getElementById('setVenue').value, venueAddress: document.getElementById('setAddress').value,
+                L1_open: document.getElementById('setL1Open').value, L1_close: document.getElementById('setL1Close').value,
+                L2_open: document.getElementById('setL2Open').value, L2_close: document.getElementById('setL2Close').value,
+                L3_open: document.getElementById('setL3Open').value, L3_close: document.getElementById('setL3Close').value,
+                L4_open: document.getElementById('setL4Open').value, L4_close: document.getElementById('setL4Close').value,
+                L5_open: document.getElementById('setL5Open').value, L5_close: document.getElementById('setL5Close').value
             };
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            await db.collection("mtse_settings").doc("config").set(payload, {merge: true});
             alert("Settings Updated Successfully!"); loadData();
         }
 
         async function resetDatabase() {
             let conf = prompt("WARNING: This permanently deletes ALL student data. Type 'DELETE' to confirm:");
-            if(conf === 'DELETE') { await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "resetDatabase"}) }); alert("Database Reset Successful!"); loadData(); }
+            if(conf === 'DELETE') { 
+                let snapshot = await db.collection("mtse_students").get();
+                let batch = db.batch();
+                snapshot.docs.forEach((doc) => { batch.delete(doc.ref); });
+                await batch.commit();
+                alert("Database Reset Successful!"); loadData(); 
+            }
         }
 
         function printAdmit(regNo) {
-            let s = studentsData.find(x => x.Registration_No == regNo);
-            if(s.Admit_Status !== 'Released') { if(!confirm(`Warning: Status is '${s.Admit_Status}'. Print anyway?`)) return; }
-            document.getElementById('admitName').innerText = s.Student_Name; document.getElementById('admitFName').innerText = s.Father_Name; document.getElementById('admitClass').innerText = s.Class; document.getElementById('admitSec').innerText = s.Section; document.getElementById('admitRoll').innerText = s.Roll_No; document.getElementById('admitLevel').innerText = s.Level; document.getElementById('admitGender').innerText = s.Gender; document.getElementById('admitRegNoTxt').innerText = s.Registration_No;
-            JsBarcode("#barcode", s.Registration_No.toString(), {format:"CODE128", width:2, height:40, displayValue:false});
+            let s = studentsData.find(x => x.regNo == regNo);
+            if(s.admitStatus !== 'Released') { if(!confirm(`Warning: Status is '${s.admitStatus}'. Print anyway?`)) return; }
+            document.getElementById('admitName').innerText = s.studentName; document.getElementById('admitFName').innerText = s.fatherName; document.getElementById('admitClass').innerText = s.class; document.getElementById('admitSec').innerText = s.section; document.getElementById('admitRoll').innerText = s.rollNo; document.getElementById('admitLevel').innerText = s.level; document.getElementById('admitGender').innerText = s.gender; document.getElementById('admitRegNoTxt').innerText = s.regNo;
+            JsBarcode("#barcode", s.regNo.toString(), {format:"CODE128", width:2, height:40, displayValue:false});
             window.print();
         }
     </script>
