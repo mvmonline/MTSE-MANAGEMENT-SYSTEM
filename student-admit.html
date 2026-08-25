@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Admit Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+            .no-print, #loginSection { display: none !important; } 
+            #printSection { display: block !important; width: 100%; border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-center font-sans">
+
+    <div id="loader" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+        <h2 class="text-xl font-bold text-blue-900">Connecting to Server...</h2>
+    </div>
+
+    <!-- Login -->
+    <div id="loginSection" class="bg-white p-6 md:p-8 rounded-lg shadow-lg w-full max-w-md text-center hidden">
+        <img src="logo.png" class="mx-auto h-20 w-20 mb-4" onerror="this.src='https://via.placeholder.com/80'">
+        <h2 class="text-xl md:text-2xl font-bold text-blue-900 mb-2">MTSE <span class="dyn-year"></span></h2>
+        <h3 class="text-lg font-semibold text-gray-700 mb-6">Download Admit Card</h3>
+        <div class="text-left mb-4"><label class="block text-sm font-bold text-gray-700 mb-1">Registration Number:</label><input type="text" id="regNoInput" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-600"></div>
+        <div class="text-left mb-6"><label class="block text-sm font-bold text-gray-700 mb-1">Date of Birth:</label><input type="date" id="dobInput" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-600"></div>
+        <button id="searchBtn" onclick="fetchAdmit()" class="w-full bg-blue-900 text-white font-bold py-3 rounded shadow hover:bg-blue-800 transition">Search & Download</button>
+        <p id="msgBox" class="mt-4 font-bold text-sm hidden"></p>
+    </div>
+
+    <!-- Print Section -->
+    <div id="printSection" class="hidden w-full max-w-3xl border-2 border-gray-800 bg-white p-4 md:p-6 mt-4 relative">
+        <div class="no-print absolute top-[-50px] right-0 flex gap-2">
+            <button onclick="window.print()" class="bg-green-600 text-white font-bold px-4 py-2 rounded shadow">Print Admit</button>
+            <button onclick="location.reload()" class="bg-gray-800 text-white font-bold px-4 py-2 rounded shadow">Back</button>
+        </div>
+        
+        <div class="flex justify-between items-center border-b-4 border-blue-900 pb-4 mb-4 mt-8 md:mt-0">
+            <img src="logo.png" class="h-16 w-16 md:h-20 md:w-20" onerror="this.src='https://via.placeholder.com/80'">
+            <div class="text-center flex-1">
+                <h1 class="text-lg md:text-2xl font-extrabold text-blue-900 tracking-wide">MAHARISHI TALENT SEARCH EXAMINATION</h1>
+                <h2 class="text-md md:text-xl font-bold mt-1"><span class="dyn-year"></span></h2>
+                <h3 class="text-sm md:text-lg font-bold bg-gray-800 text-white inline-block px-4 md:px-6 py-1 mt-2 rounded-full">ADMIT CARD</h3>
+            </div>
+            <div class="h-24 w-20 md:h-28 md:w-24 border-2 border-dashed border-gray-400 flex items-center justify-center text-xs text-center text-gray-500">Paste Recent<br>Photo</div>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-between mb-6 gap-4 md:gap-0">
+            <div class="space-y-2 text-xs md:text-sm flex-1">
+                <p><span class="font-bold inline-block w-28 md:w-32">NAME:</span> <span id="admitName" class="uppercase font-bold text-sm md:text-base"></span></p>
+                <p><span class="font-bold inline-block w-28 md:w-32">FATHER'S NAME:</span> <span id="admitFName" class="uppercase"></span></p>
+                <p><span class="font-bold inline-block w-28 md:w-32">CLASS & SEC:</span> Class <span id="admitClass"></span> (<span id="admitSec"></span>)</p>
+                <p><span class="font-bold inline-block w-28 md:w-32">ROLL NO:</span> <span id="admitRoll"></span></p>
+                <p><span class="font-bold inline-block w-28 md:w-32">LEVEL:</span> <span id="admitLevel"></span></p>
+                <p><span class="font-bold inline-block w-28 md:w-32">GENDER:</span> <span id="admitGender"></span></p>
+            </div>
+            <div class="text-left md:text-right flex flex-col md:items-end justify-start">
+                <div class="bg-gray-100 p-2 border border-gray-300 rounded mb-2 w-full md:w-48 text-center">
+                    <p class="text-[10px] md:text-xs font-bold text-gray-600 mb-1">REGISTRATION NO</p>
+                    <p id="admitRegNoTxt" class="text-base md:text-lg font-extrabold text-blue-900"></p>
+                </div>
+                <svg id="barcode" class="max-w-full"></svg>
+            </div>
+        </div>
+
+        <div class="border-2 border-gray-800 rounded p-3 md:p-4 bg-blue-50">
+            <h4 class="font-bold text-center underline mb-3 text-sm md:text-base">EXAMINATION DETAILS</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 text-xs md:text-sm font-semibold">
+                <div><span class="text-gray-700">Date:</span> <span class="dyn-date"></span></div>
+                <div><span class="text-gray-700">Reporting Time:</span> <span class="dyn-repTime"></span></div>
+                <div><span class="text-gray-700">Exam Time:</span> <span class="dyn-exTime"></span></div>
+                <div><span class="text-gray-700">Venue:</span> <span class="dyn-venue"></span></div>
+            </div>
+            <div class="mt-2 text-xs md:text-sm"><span class="font-bold text-gray-700">Venue Address:</span> <span class="dyn-address"></span></div>
+        </div>
+
+        <div class="mt-16 md:mt-20 flex justify-between text-[10px] md:text-sm font-bold text-gray-800">
+            <div class="text-center w-24 md:w-40 border-t border-black pt-2">CANDIDATE SIGN</div>
+            <div class="text-center w-24 md:w-40 border-t border-black pt-2">INVIGILATOR SIGN</div>
+            <div class="text-center w-24 md:w-40 border-t border-black pt-2 relative">
+                <img src="sign.png" class="absolute bottom-6 left-0 right-0 mx-auto h-8 md:h-10 object-contain" onerror="this.style.display='none'">
+                PRINCIPAL SIGN
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6K-sYXA16ZdzM90WCLiwe9T5Iav_63tveRNq15HwXcHB066C0xkp4LQjDSSV5yc7PoQ/exec"; 
+        
+        window.onload = async function() {
+            try {
+                let res = await fetch(SCRIPT_URL + "?action=getSettings");
+                let s = await res.json();
+                document.querySelectorAll('.dyn-year').forEach(e => e.innerText = s.year);
+                document.querySelectorAll('.dyn-date').forEach(e => e.innerText = s.examDate);
+                document.querySelectorAll('.dyn-repTime').forEach(e => e.innerText = s.reportingTime);
+                document.querySelectorAll('.dyn-exTime').forEach(e => e.innerText = s.examTime);
+                document.querySelectorAll('.dyn-venue').forEach(e => e.innerText = s.venue);
+                document.querySelectorAll('.dyn-address').forEach(e => e.innerText = s.venueAddress);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('loginSection').classList.remove('hidden');
+            } catch(e) { document.getElementById('loader').innerHTML = "<h2 class='text-red-600 font-bold'>Error Loading App!</h2>"; }
+        };
+
+        async function fetchAdmit() {
+            let reg = document.getElementById('regNoInput').value.trim();
+            let dob = document.getElementById('dobInput').value;
+            let msg = document.getElementById('msgBox');
+            let btn = document.getElementById('searchBtn');
+
+            if(!reg || !dob) { msg.innerText = "Enter both Registration No & DOB"; msg.className = "mt-4 text-red-600 font-bold block"; return; }
+            btn.innerText = "Searching..."; btn.disabled = true;
+
+            try {
+                let res = await fetch(SCRIPT_URL + "?action=getStudents");
+                let raw = await res.json();
+                if(raw.length <= 1) throw "No Data";
+                
+                let headers = raw[0];
+                let students = raw.slice(1).map(r => { let o={}; headers.forEach((h,i)=>o[h]=r[i]); return o; });
+                let s = students.find(x => x.Registration_No == reg && x.DOB === dob);
+
+                if(s && s.Admit_Status === "Released") {
+                    document.getElementById('admitName').innerText = s.Student_Name;
+                    document.getElementById('admitFName').innerText = s.Father_Name;
+                    document.getElementById('admitClass').innerText = s.Class;
+                    document.getElementById('admitSec').innerText = s.Section;
+                    document.getElementById('admitRoll').innerText = s.Roll_No;
+                    document.getElementById('admitLevel').innerText = s.Level;
+                    document.getElementById('admitGender').innerText = s.Gender;
+                    document.getElementById('admitRegNoTxt').innerText = s.Registration_No;
+                    JsBarcode("#barcode", s.Registration_No.toString(), {format:"CODE128", width:2, height:30, displayValue:false});
+                    
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('printSection').style.display = 'block';
+                } else if(s) {
+                    msg.innerText = "Status is: " + s.Admit_Status + ". Please contact school.";
+                    msg.className = "mt-4 text-orange-600 font-bold block";
+                } else {
+                    msg.innerText = "Invalid Details found!";
+                    msg.className = "mt-4 text-red-600 font-bold block";
+                }
+            } catch(e) { msg.innerText = "Server Error!"; msg.className = "mt-4 text-red-600 font-bold block"; }
+            
+            btn.innerText = "Search & Download"; btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
