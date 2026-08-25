@@ -6,6 +6,9 @@
     <title>Download Admit Card</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore-compat.js"></script>
     <style>
         @media print {
             @page { size: A4; margin: 10mm; }
@@ -18,7 +21,7 @@
 <body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-center font-sans">
 
     <div id="loader" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-        <h2 class="text-xl font-bold text-blue-900">Connecting to Server...</h2>
+        <h2 class="text-xl font-bold text-blue-900" id="loaderText">Connecting to Server...</h2>
     </div>
 
     <!-- Login -->
@@ -89,21 +92,35 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6K-sYXA16ZdzM90WCLiwe9T5Iav_63tveRNq15HwXcHB066C0xkp4LQjDSSV5yc7PoQ/exec"; 
+        // আপোনাৰ Firebase Config ইয়াত দিয়া হৈছে
+        const firebaseConfig = {
+            apiKey: "AIzaSyCG00CkuMozSfVCnB9qU42DsbLVmI3y9dg",
+            authDomain: "mtse2026-805a0.firebaseapp.com",
+            databaseURL: "https://mtse2026-805a0-default-rtdb.firebaseio.com",
+            projectId: "mtse2026-805a0",
+            storageBucket: "mtse2026-805a0.firebasestorage.app",
+            messagingSenderId: "641604091734",
+            appId: "1:641604091734:web:391d6501ea459bace0e0f7",
+            measurementId: "G-NP8PZXT8W0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
         
         window.onload = async function() {
             try {
-                let res = await fetch(SCRIPT_URL + "?action=getSettings");
-                let s = await res.json();
-                document.querySelectorAll('.dyn-year').forEach(e => e.innerText = s.year);
-                document.querySelectorAll('.dyn-date').forEach(e => e.innerText = s.examDate);
-                document.querySelectorAll('.dyn-repTime').forEach(e => e.innerText = s.reportingTime);
-                document.querySelectorAll('.dyn-exTime').forEach(e => e.innerText = s.examTime);
-                document.querySelectorAll('.dyn-venue').forEach(e => e.innerText = s.venue);
-                document.querySelectorAll('.dyn-address').forEach(e => e.innerText = s.venueAddress);
+                let doc = await db.collection("mtse_settings").doc("config").get();
+                if(doc.exists) {
+                    let s = doc.data();
+                    document.querySelectorAll('.dyn-year').forEach(e => e.innerText = s.year || '2026');
+                    document.querySelectorAll('.dyn-date').forEach(e => e.innerText = s.examDate || '');
+                    document.querySelectorAll('.dyn-repTime').forEach(e => e.innerText = s.reportingTime || '');
+                    document.querySelectorAll('.dyn-exTime').forEach(e => e.innerText = s.examTime || '');
+                    document.querySelectorAll('.dyn-venue').forEach(e => e.innerText = s.venue || '');
+                    document.querySelectorAll('.dyn-address').forEach(e => e.innerText = s.venueAddress || '');
+                }
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('loginSection').classList.remove('hidden');
-            } catch(e) { document.getElementById('loader').innerHTML = "<h2 class='text-red-600 font-bold'>Error Loading App!</h2>"; }
+            } catch(e) { document.getElementById('loaderText').innerText = "Failed to Connect to Database!"; }
         };
 
         async function fetchAdmit() {
@@ -116,35 +133,33 @@
             btn.innerText = "Searching..."; btn.disabled = true;
 
             try {
-                let res = await fetch(SCRIPT_URL + "?action=getStudents");
-                let raw = await res.json();
-                if(raw.length <= 1) throw "No Data";
+                let doc = await db.collection("mtse_students").doc(reg).get();
+                if(!doc.exists) { throw "No Data"; }
                 
-                let headers = raw[0];
-                let students = raw.slice(1).map(r => { let o={}; headers.forEach((h,i)=>o[h]=r[i]); return o; });
-                let s = students.find(x => x.Registration_No == reg && x.DOB === dob);
+                let s = doc.data();
+                if (s.dob !== dob) { throw "Invalid DOB"; }
 
-                if(s && s.Admit_Status === "Released") {
-                    document.getElementById('admitName').innerText = s.Student_Name;
-                    document.getElementById('admitFName').innerText = s.Father_Name;
-                    document.getElementById('admitClass').innerText = s.Class;
-                    document.getElementById('admitSec').innerText = s.Section;
-                    document.getElementById('admitRoll').innerText = s.Roll_No;
-                    document.getElementById('admitLevel').innerText = s.Level;
-                    document.getElementById('admitGender').innerText = s.Gender;
-                    document.getElementById('admitRegNoTxt').innerText = s.Registration_No;
-                    JsBarcode("#barcode", s.Registration_No.toString(), {format:"CODE128", width:2, height:30, displayValue:false});
+                if(s.admitStatus === "Released") {
+                    document.getElementById('admitName').innerText = s.studentName;
+                    document.getElementById('admitFName').innerText = s.fatherName;
+                    document.getElementById('admitClass').innerText = s.class;
+                    document.getElementById('admitSec').innerText = s.section;
+                    document.getElementById('admitRoll').innerText = s.rollNo;
+                    document.getElementById('admitLevel').innerText = s.level;
+                    document.getElementById('admitGender').innerText = s.gender;
+                    document.getElementById('admitRegNoTxt').innerText = s.regNo;
+                    JsBarcode("#barcode", s.regNo.toString(), {format:"CODE128", width:2, height:30, displayValue:false});
                     
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('printSection').style.display = 'block';
-                } else if(s) {
-                    msg.innerText = "Status is: " + s.Admit_Status + ". Please contact school.";
-                    msg.className = "mt-4 text-orange-600 font-bold block";
                 } else {
-                    msg.innerText = "Invalid Details found!";
-                    msg.className = "mt-4 text-red-600 font-bold block";
+                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school.";
+                    msg.className = "mt-4 text-orange-600 font-bold block";
                 }
-            } catch(e) { msg.innerText = "Server Error!"; msg.className = "mt-4 text-red-600 font-bold block"; }
+            } catch(e) { 
+                msg.innerText = "Invalid Details or Not Found!"; 
+                msg.className = "mt-4 text-red-600 font-bold block"; 
+            }
             
             btn.innerText = "Search & Download"; btn.disabled = false;
         }
