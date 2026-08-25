@@ -6,6 +6,9 @@
     <title>MTSE Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore-compat.js"></script>
     <style>
         @media print {
             @page { size: A4; margin: 10mm; }
@@ -18,7 +21,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-2 md:p-6 font-sans">
     <div id="loader" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-        <h2 class="text-xl md:text-2xl font-bold text-blue-900">Loading System...</h2>
+        <h2 class="text-xl md:text-2xl font-bold text-blue-900" id="loaderText">Connecting to Database...</h2>
     </div>
 
     <!-- Registration Form -->
@@ -52,7 +55,7 @@
                 <input type="checkbox" id="declaration" required class="mt-1 mr-2">
                 <label class="text-sm text-gray-700">I hereby declare that all the information provided by me in this registration form are true and correct. If found misleading at any stage, my candidature is liable to be cancelled.</label>
             </div>
-            <div class="text-center"><button type="submit" id="submitBtn" class="bg-blue-900 text-white font-bold py-3 px-10 rounded-lg hover:bg-blue-800 w-full md:w-auto shadow-lg transition disabled:bg-gray-400 disabled:cursor-not-allowed">Submit Application</button></div>
+            <div class="text-center"><button type="submit" id="submitBtn" class="bg-blue-900 text-white font-bold py-3 px-10 rounded-lg hover:bg-blue-800 w-full md:w-auto shadow-lg transition disabled:bg-gray-400">Submit Application</button></div>
         </form>
     </div>
 
@@ -62,7 +65,6 @@
             <button onclick="window.print()" class="bg-green-600 text-white font-bold py-2 px-4 rounded shadow">Print Slip</button>
             <button onclick="location.reload()" class="bg-gray-800 text-white font-bold py-2 px-4 rounded shadow">New Reg.</button>
         </div>
-        
         <div class="border-2 border-gray-800 p-4 md:p-6 relative">
             <div class="flex justify-between items-center border-b-2 border-gray-800 pb-4 mb-4">
                 <img src="logo.png" class="h-16 w-16" onerror="this.src='https://via.placeholder.com/80'">
@@ -84,9 +86,7 @@
                 <tr><td class="font-semibold py-1">PHONE NO:</td><td id="slipPhone"></td></tr>
             </table>
         </div>
-
         <div class="text-center my-6 font-bold text-gray-500 text-xs md:text-sm">-------------------------------- CUT HERE --------------------------------</div>
-
         <div class="border-2 border-gray-800 p-4 md:p-6">
             <div class="text-center mb-4">
                 <h1 class="text-md md:text-lg font-bold">MAHARISHI TALENT SEARCH EXAMINATION - <span class="dyn-year"></span></h1>
@@ -113,18 +113,36 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6K-sYXA16ZdzM90WCLiwe9T5Iav_63tveRNq15HwXcHB066C0xkp4LQjDSSV5yc7PoQ/exec"; 
+        // আপোনাৰ Firebase Config ইয়াত দিয়া হৈছে
+        const firebaseConfig = {
+            apiKey: "AIzaSyCG00CkuMozSfVCnB9qU42DsbLVmI3y9dg",
+            authDomain: "mtse2026-805a0.firebaseapp.com",
+            databaseURL: "https://mtse2026-805a0-default-rtdb.firebaseio.com",
+            projectId: "mtse2026-805a0",
+            storageBucket: "mtse2026-805a0.firebasestorage.app",
+            messagingSenderId: "641604091734",
+            appId: "1:641604091734:web:391d6501ea459bace0e0f7",
+            measurementId: "G-NP8PZXT8W0"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let appSettings = {};
         let isTimeValid = true;
 
         window.onload = async function() {
             try {
-                let res = await fetch(SCRIPT_URL + "?action=getSettings");
-                appSettings = await res.json();
-                document.querySelectorAll('.dyn-year').forEach(el => el.innerText = appSettings.year);
+                let doc = await db.collection("mtse_settings").doc("config").get();
+                if(doc.exists) {
+                    appSettings = doc.data();
+                    document.querySelectorAll('.dyn-year').forEach(el => el.innerText = appSettings.year || '2026');
+                }
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('formSection').classList.remove('hidden');
-            } catch(e) { alert("Failed to connect to Database! Please refresh."); }
+            } catch(e) { 
+                document.getElementById('loaderText').innerText = "Failed to connect! Check Firebase Setup."; 
+            }
         };
 
         function updateLevel() {
@@ -161,38 +179,65 @@
         async function handleFormSubmit(e) {
             e.preventDefault();
             if(!isTimeValid) return alert("Registration is currently closed for this Level.");
-            if(!confirm("Are you sure you want to submit?")) return;
             
             const btn = document.getElementById('submitBtn');
             btn.innerHTML = "Submitting..."; btn.disabled = true;
 
-            const formData = {
-                action: "register",
-                studentName: document.getElementById('studentName').value.toUpperCase(),
-                fatherName: document.getElementById('fatherName').value.toUpperCase(),
-                motherName: document.getElementById('motherName').value.toUpperCase(),
-                gender: document.getElementById('gender').value,
-                class: document.getElementById('class').value,
-                section: document.getElementById('section').value,
-                rollNo: document.getElementById('rollNo').value,
-                dob: document.getElementById('dob').value,
-                level: document.getElementById('level').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value.toLowerCase()
-            };
+            let sName = document.getElementById('studentName').value.toUpperCase();
+            let dobVal = document.getElementById('dob').value;
 
             try {
-                let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(formData) });
-                let data = await res.json();
-                generateSlip(formData, data.regNo);
-            } catch (err) { alert("Error Submitting! Check your connection."); btn.innerHTML = "Submit Application"; btn.disabled = false; }
+                // DUPLICATE CHECK
+                const existing = await db.collection("mtse_students")
+                    .where("studentName", "==", sName)
+                    .where("dob", "==", dobVal)
+                    .get();
+
+                if (!existing.empty) {
+                    let oldData = existing.docs[0].data();
+                    alert("You have already registered! Showing your existing Acknowledgement Slip.");
+                    generateSlip(oldData, oldData.regNo, oldData.timestamp);
+                    return;
+                }
+
+                if(!confirm("Are you sure you want to submit?")) {
+                    btn.innerHTML = "Submit Application"; btn.disabled = false; return;
+                }
+
+                let regNo = Math.floor(100000 + Math.random() * 900000); 
+                let dateStr = new Date().toLocaleDateString();
+
+                const formData = {
+                    regNo: regNo,
+                    studentName: sName,
+                    fatherName: document.getElementById('fatherName').value.toUpperCase(),
+                    motherName: document.getElementById('motherName').value.toUpperCase(),
+                    gender: document.getElementById('gender').value,
+                    class: document.getElementById('class').value,
+                    section: document.getElementById('section').value,
+                    rollNo: document.getElementById('rollNo').value,
+                    dob: dobVal,
+                    level: document.getElementById('level').value,
+                    phone: document.getElementById('phone').value,
+                    email: document.getElementById('email').value.toLowerCase(),
+                    admitStatus: "Released",
+                    timestamp: dateStr
+                };
+
+                // Save to Firebase
+                await db.collection("mtse_students").doc(regNo.toString()).set(formData);
+                generateSlip(formData, regNo, dateStr);
+
+            } catch (err) { 
+                alert("Error Submitting! Check your internet connection."); 
+                btn.innerHTML = "Submit Application"; btn.disabled = false; 
+            }
         }
 
-        function generateSlip(data, regNo) {
+        function generateSlip(data, regNo, dateStr) {
             document.getElementById('formSection').classList.add('hidden');
             document.getElementById('slipSection').classList.remove('hidden');
-            let dateStr = new Date().toLocaleDateString();
-
+            
             document.getElementById('slipRegNo').innerText = regNo;
             document.getElementById('slipSubDate').innerText = dateStr;
             document.getElementById('slipName').innerText = data.studentName;
@@ -209,6 +254,8 @@
             document.getElementById('receiptSec').innerText = data.section;
             document.getElementById('receiptRoll').innerText = data.rollNo;
 
+            document.getElementById("qrcode").innerHTML = "";
+            document.getElementById("receiptQr").innerHTML = "";
             new QRCode(document.getElementById("qrcode"), { text: regNo.toString(), width: 64, height: 64 });
             new QRCode(document.getElementById("receiptQr"), { text: regNo.toString(), width: 64, height: 64 });
         }
