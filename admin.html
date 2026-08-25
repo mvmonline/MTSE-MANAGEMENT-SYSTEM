@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTSE Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+            #ui-layer { display: none !important; } 
+            #printSection { display: block !important; width: 100%; border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    
+    <div id="ui-layer">
+        <!-- Login -->
+        <div id="loginSection" class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+                <img src="logo.png" class="mx-auto h-20 w-20 mb-4" onerror="this.src='https://via.placeholder.com/80'">
+                <h2 class="text-2xl font-bold mb-4 text-blue-900">Admin Login</h2>
+                <input type="text" id="username" placeholder="Admin User ID" class="w-full border p-3 rounded mb-3 outline-none focus:ring-2 focus:ring-blue-600">
+                <input type="password" id="password" placeholder="Password" class="w-full border p-3 rounded mb-6 outline-none focus:ring-2 focus:ring-blue-600">
+                <button onclick="login()" class="w-full bg-blue-900 text-white font-bold py-3 rounded hover:bg-blue-800 shadow">Login</button>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboardSection" class="hidden p-2 md:p-6 max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4 bg-white p-4 rounded shadow gap-2 md:gap-0">
+                <h1 class="text-xl md:text-2xl font-bold text-blue-900">MTSE <span class="dyn-year"></span> Admin</h1>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button onclick="showTab('students')" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm md:text-base">Students</button>
+                    <button onclick="showTab('settings')" class="bg-gray-800 text-white px-3 py-1.5 rounded text-sm md:text-base">Settings</button>
+                    <button onclick="logout()" class="bg-red-600 text-white px-3 py-1.5 rounded text-sm md:text-base">Logout</button>
+                </div>
+            </div>
+
+            <!-- Tab 1: Students -->
+            <div id="tab-students">
+                <div class="bg-white p-4 rounded shadow mb-4 flex flex-col md:flex-row gap-2 md:gap-4 items-center">
+                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search Name or Reg No..." class="border p-2 w-full md:w-1/2 rounded">
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="loadData()" class="bg-green-600 text-white px-4 py-2 rounded flex-1 md:flex-none whitespace-nowrap">Refresh</button>
+                        <button onclick="downloadCSV()" class="bg-yellow-500 text-white px-4 py-2 rounded flex-1 md:flex-none whitespace-nowrap font-semibold shadow">Export Excel</button>
+                    </div>
+                </div>
+                <div class="bg-white rounded shadow overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm md:text-base">
+                        <thead><tr class="bg-blue-900 text-white"><th class="p-2 md:p-3 whitespace-nowrap">Reg No</th><th class="p-2 md:p-3">Name</th><th class="p-2 md:p-3 whitespace-nowrap">Class & Sec</th><th class="p-2 md:p-3 text-center">Status</th><th class="p-2 md:p-3 text-center">Action</th></tr></thead>
+                        <tbody id="dataTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: Settings -->
+            <div id="tab-settings" class="hidden bg-white p-4 md:p-6 rounded shadow">
+                
+                <h2 class="text-xl font-bold mb-4 border-b pb-2 text-blue-900">Application Open/Close Timings by Level</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-blue-50 p-4 rounded border">
+                    <div><label class="block font-bold text-sm">Level I (Class I & II) - Open</label><input type="datetime-local" id="setL1Open" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level I - Close</label><input type="datetime-local" id="setL1Close" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level II (Class III & IV) - Open</label><input type="datetime-local" id="setL2Open" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level II - Close</label><input type="datetime-local" id="setL2Close" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level III (Class V & VI) - Open</label><input type="datetime-local" id="setL3Open" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level III - Close</label><input type="datetime-local" id="setL3Close" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level IV (Class VII & VIII) - Open</label><input type="datetime-local" id="setL4Open" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level IV - Close</label><input type="datetime-local" id="setL4Close" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level V (Class IX & X) - Open</label><input type="datetime-local" id="setL5Open" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Level V - Close</label><input type="datetime-local" id="setL5Close" class="border p-2 w-full rounded"></div>
+                </div>
+
+                <h2 class="text-xl font-bold mb-4 border-b pb-2 text-blue-900">Admit Card Details</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div><label class="block font-bold text-sm">Exam Year</label><input type="text" id="setYear" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Exam Date</label><input type="text" id="setDate" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Reporting Time</label><input type="text" id="setRepTime" class="border p-2 w-full rounded"></div>
+                    <div><label class="block font-bold text-sm">Exam Time</label><input type="text" id="setExTime" class="border p-2 w-full rounded"></div>
+                    <div class="md:col-span-2"><label class="block font-bold text-sm">Venue Name</label><input type="text" id="setVenue" class="border p-2 w-full rounded"></div>
+                    <div class="md:col-span-2"><label class="block font-bold text-sm">Venue Address</label><input type="text" id="setAddress" class="border p-2 w-full rounded"></div>
+                </div>
+                <button onclick="saveSettings()" class="bg-blue-900 text-white px-6 py-3 rounded font-bold w-full md:w-auto shadow">Save All Settings</button>
+
+                <div class="mt-10 p-4 border-2 border-red-200 bg-red-50 rounded">
+                    <h2 class="text-lg font-bold text-red-600 mb-1">Danger Zone</h2>
+                    <p class="text-sm mb-4 text-red-800">Delete all student records to start a new session. Settings will remain saved.</p>
+                    <button onclick="resetDatabase()" class="bg-red-600 text-white px-6 py-2 rounded font-bold shadow w-full md:w-auto">Clear All Student Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Section (Admit Card) -->
+    <div id="printSection" class="hidden p-4 md:p-6 max-w-3xl mx-auto border-2 border-gray-800 bg-white">
+        <div class="flex justify-between items-center border-b-4 border-blue-900 pb-4 mb-4">
+            <img src="logo.png" class="h-20 w-20" onerror="this.src='https://via.placeholder.com/80'">
+            <div class="text-center flex-1">
+                <h1 class="text-2xl font-extrabold text-blue-900 tracking-wide">MAHARISHI TALENT SEARCH EXAMINATION</h1>
+                <h2 class="text-xl font-bold mt-1"><span class="dyn-year"></span></h2>
+                <h3 class="text-lg font-bold bg-gray-800 text-white inline-block px-6 py-1 mt-2 rounded-full">ADMIT CARD</h3>
+            </div>
+            <div class="h-28 w-24 border-2 border-dashed border-gray-400 flex items-center justify-center text-xs text-center text-gray-500">Paste Recent<br>Photo</div>
+        </div>
+        <div class="flex justify-between mb-6">
+            <div class="space-y-2 text-sm flex-1">
+                <p><span class="font-bold inline-block w-32">NAME:</span> <span id="admitName" class="uppercase font-bold text-base"></span></p>
+                <p><span class="font-bold inline-block w-32">FATHER'S NAME:</span> <span id="admitFName" class="uppercase"></span></p>
+                <p><span class="font-bold inline-block w-32">CLASS & SEC:</span> Class <span id="admitClass"></span> (<span id="admitSec"></span>)</p>
+                <p><span class="font-bold inline-block w-32">ROLL NO:</span> <span id="admitRoll"></span></p>
+                <p><span class="font-bold inline-block w-32">LEVEL:</span> <span id="admitLevel"></span></p>
+                <p><span class="font-bold inline-block w-32">GENDER:</span> <span id="admitGender"></span></p>
+            </div>
+            <div class="text-right flex flex-col items-end justify-start ml-4">
+                <div class="bg-gray-100 p-2 border border-gray-300 rounded mb-2 w-48 text-center">
+                    <p class="text-xs font-bold text-gray-600 mb-1">REGISTRATION NO</p>
+                    <p id="admitRegNoTxt" class="text-lg font-extrabold text-blue-900"></p>
+                </div>
+                <svg id="barcode"></svg>
+            </div>
+        </div>
+        <div class="border-2 border-gray-800 rounded p-4 bg-blue-50">
+            <h4 class="font-bold text-center underline mb-3">EXAMINATION DETAILS</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm font-semibold">
+                <div><span class="text-gray-700">Date:</span> <span class="dyn-date"></span></div>
+                <div><span class="text-gray-700">Reporting Time:</span> <span class="dyn-repTime"></span></div>
+                <div><span class="text-gray-700">Exam Time:</span> <span class="dyn-exTime"></span></div>
+                <div><span class="text-gray-700">Venue:</span> <span class="dyn-venue"></span></div>
+            </div>
+            <div class="mt-2 text-sm"><span class="font-bold text-gray-700">Venue Address:</span> <span class="dyn-address"></span></div>
+        </div>
+        <div class="mt-6 text-xs">
+            <h4 class="font-bold mb-2">INSTRUCTIONS:</h4>
+            <ul class="list-disc pl-5 space-y-1 text-justify">
+                <li>Arrive at the venue at least 30 minutes prior to the start.</li>
+                <li>Bring your Admit Card and a valid Photo ID for verification.</li>
+                <li>Use only Black or Blue ballpoint pen. Electronic devices are prohibited.</li>
+            </ul>
+        </div>
+        <div class="mt-20 flex justify-between text-sm font-bold text-gray-800">
+            <div class="text-center w-40 border-t border-black pt-2">CANDIDATE SIGNATURE</div>
+            <div class="text-center w-40 border-t border-black pt-2">INVIGILATOR SIGNATURE</div>
+            <div class="text-center w-40 border-t border-black pt-2 relative">
+                <img src="sign.png" class="absolute bottom-6 left-0 right-0 mx-auto h-10 object-contain" onerror="this.style.display='none'">
+                PRINCIPAL SIGNATURE
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6K-sYXA16ZdzM90WCLiwe9T5Iav_63tveRNq15HwXcHB066C0xkp4LQjDSSV5yc7PoQ/exec"; 
+        let studentsData = [], appSettings = {};
+
+        function login() {
+            if(document.getElementById('username').value === '7002373630' && document.getElementById('password').value === 'Mvm@mtse21210') {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                loadData();
+            } else { alert("Wrong Credentials!"); }
+        }
+        function logout() { location.reload(); }
+        function showTab(tab) {
+            document.getElementById('tab-students').classList.add('hidden');
+            document.getElementById('tab-settings').classList.add('hidden');
+            document.getElementById('tab-'+tab).classList.remove('hidden');
+        }
+
+        async function loadData() {
+            document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center p-4">Loading Data...</td></tr>';
+            try {
+                let resSet = await fetch(SCRIPT_URL + "?action=getSettings");
+                appSettings = await resSet.json();
+                updateUIVariables();
+
+                let resStu = await fetch(SCRIPT_URL + "?action=getStudents");
+                let rawData = await resStu.json();
+                if(rawData.length > 1) {
+                    studentsData = rawData.slice(1).map(r => { let o={}; rawData[0].forEach((h,i)=>o[h]=r[i]); return o; });
+                } else { studentsData = []; }
+                renderTable(studentsData);
+            } catch(e) { document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center p-4 text-red-500">Error loading data</td></tr>'; }
+        }
+
+        function updateUIVariables() {
+            document.querySelectorAll('.dyn-year').forEach(e => e.innerText = appSettings.year);
+            document.querySelectorAll('.dyn-date').forEach(e => e.innerText = appSettings.examDate);
+            document.querySelectorAll('.dyn-repTime').forEach(e => e.innerText = appSettings.reportingTime);
+            document.querySelectorAll('.dyn-exTime').forEach(e => e.innerText = appSettings.examTime);
+            document.querySelectorAll('.dyn-venue').forEach(e => e.innerText = appSettings.venue);
+            document.querySelectorAll('.dyn-address').forEach(e => e.innerText = appSettings.venueAddress);
+            
+            document.getElementById('setYear').value = appSettings.year || '';
+            document.getElementById('setDate').value = appSettings.examDate || '';
+            document.getElementById('setRepTime').value = appSettings.reportingTime || '';
+            document.getElementById('setExTime').value = appSettings.examTime || '';
+            document.getElementById('setVenue').value = appSettings.venue || '';
+            document.getElementById('setAddress').value = appSettings.venueAddress || '';
+
+            document.getElementById('setL1Open').value = appSettings.L1_open || '';
+            document.getElementById('setL1Close').value = appSettings.L1_close || '';
+            document.getElementById('setL2Open').value = appSettings.L2_open || '';
+            document.getElementById('setL2Close').value = appSettings.L2_close || '';
+            document.getElementById('setL3Open').value = appSettings.L3_open || '';
+            document.getElementById('setL3Close').value = appSettings.L3_close || '';
+            document.getElementById('setL4Open').value = appSettings.L4_open || '';
+            document.getElementById('setL4Close').value = appSettings.L4_close || '';
+            document.getElementById('setL5Open').value = appSettings.L5_open || '';
+            document.getElementById('setL5Close').value = appSettings.L5_close || '';
+        }
+
+        function renderTable(data) {
+            let tbody = document.getElementById('dataTableBody'); tbody.innerHTML = '';
+            if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">No records found.</td></tr>'; return; }
+            
+            data.forEach(s => {
+                let statusColor = s.Admit_Status === 'Released' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                tbody.insertAdjacentHTML('beforeend', `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-2 md:p-3 font-bold">${s.Registration_No}</td>
+                    <td class="p-2 md:p-3 font-semibold uppercase">${s.Student_Name}</td>
+                    <td class="p-2 md:p-3">Class ${s.Class} (${s.Section})</td>
+                    <td class="p-2 md:p-3 text-center">
+                        <select onchange="changeStatus('${s.Registration_No}', this.value)" class="border p-1 rounded text-xs md:text-sm font-bold outline-none ${statusColor}">
+                            <option value="Released" ${s.Admit_Status === 'Released' ? 'selected' : ''}>Released</option>
+                            <option value="Hold" ${s.Admit_Status === 'Hold' ? 'selected' : ''}>Hold</option>
+                        </select>
+                    </td>
+                    <td class="p-2 md:p-3 text-center"><button onclick="printAdmit('${s.Registration_No}')" class="bg-blue-900 text-white px-3 py-1 rounded shadow hover:bg-blue-800 text-sm">Print</button></td>
+                </tr>`);
+            });
+        }
+
+        function filterTable() {
+            let q = document.getElementById('searchInput').value.toLowerCase();
+            renderTable(studentsData.filter(s => s.Student_Name.toLowerCase().includes(q) || s.Registration_No.toString().includes(q)));
+        }
+
+        async function changeStatus(regNo, newStatus) {
+            try {
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "updateStatus", regNo: regNo, status: newStatus }) });
+                studentsData.find(s => s.Registration_No == regNo).Admit_Status = newStatus;
+                renderTable(studentsData); 
+            } catch(e) { alert("Error updating status"); }
+        }
+
+        function downloadCSV() {
+            if(studentsData.length === 0) return alert("No data available.");
+            let csv = "Registration_No,Student_Name,Father_Name,Mother_Name,Gender,Class,Section,Roll_No,DOB,Level,Phone,Email,Admit_Status\n";
+            studentsData.forEach(r => { csv += `"${r.Registration_No}","${r.Student_Name}","${r.Father_Name}","${r.Mother_Name}","${r.Gender}","${r.Class}","${r.Section}","${r.Roll_No}","${r.DOB}","${r.Level}","${r.Phone}","${r.Email}","${r.Admit_Status}"\n`; });
+            let blob = new Blob([csv], { type: 'text/csv' });
+            let link = document.createElement("a"); link.href = window.URL.createObjectURL(blob); link.download = `MTSE_Data_${appSettings.year}.csv`; link.click();
+        }
+
+        async function saveSettings() {
+            let payload = {
+                action: "updateSettings",
+                settings: { 
+                    year: document.getElementById('setYear').value, examDate: document.getElementById('setDate').value, reportingTime: document.getElementById('setRepTime').value, examTime: document.getElementById('setExTime').value, venue: document.getElementById('setVenue').value, venueAddress: document.getElementById('setAddress').value,
+                    L1_open: document.getElementById('setL1Open').value, L1_close: document.getElementById('setL1Close').value,
+                    L2_open: document.getElementById('setL2Open').value, L2_close: document.getElementById('setL2Close').value,
+                    L3_open: document.getElementById('setL3Open').value, L3_close: document.getElementById('setL3Close').value,
+                    L4_open: document.getElementById('setL4Open').value, L4_close: document.getElementById('setL4Close').value,
+                    L5_open: document.getElementById('setL5Open').value, L5_close: document.getElementById('setL5Close').value
+                }
+            };
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            alert("Settings Updated Successfully!"); loadData();
+        }
+
+        async function resetDatabase() {
+            let conf = prompt("WARNING: This permanently deletes ALL student data. Type 'DELETE' to confirm:");
+            if(conf === 'DELETE') { await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "resetDatabase"}) }); alert("Database Reset Successful!"); loadData(); }
+        }
+
+        function printAdmit(regNo) {
+            let s = studentsData.find(x => x.Registration_No == regNo);
+            if(s.Admit_Status !== 'Released') { if(!confirm(`Warning: Status is '${s.Admit_Status}'. Print anyway?`)) return; }
+            document.getElementById('admitName').innerText = s.Student_Name; document.getElementById('admitFName').innerText = s.Father_Name; document.getElementById('admitClass').innerText = s.Class; document.getElementById('admitSec').innerText = s.Section; document.getElementById('admitRoll').innerText = s.Roll_No; document.getElementById('admitLevel').innerText = s.Level; document.getElementById('admitGender').innerText = s.Gender; document.getElementById('admitRegNoTxt').innerText = s.Registration_No;
+            JsBarcode("#barcode", s.Registration_No.toString(), {format:"CODE128", width:2, height:40, displayValue:false});
+            window.print();
+        }
+    </script>
+</body>
+</html>
