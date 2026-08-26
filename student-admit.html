@@ -6,7 +6,6 @@
     <title>Download Admit Card</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore-compat.js"></script>
     <style>
@@ -14,85 +13,102 @@
             @page { size: A4; margin: 10mm; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
             .no-print, #loginSection { display: none !important; } 
-            #printSection { display: block !important; width: 100%; border: none; padding: 0; }
+            #printSection { display: block !important; width: 100%; border: none; padding: 0; page-break-inside: avoid;}
         }
+        input { transition: all 0.3s ease; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-center font-sans">
+<body class="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen p-4 flex flex-col items-center justify-center font-sans">
 
-    <div id="loader" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-        <h2 class="text-xl font-bold text-blue-900" id="loaderText">Connecting to Server...</h2>
+    <div id="loader" class="fixed inset-0 bg-white bg-opacity-95 flex flex-col items-center justify-center z-50">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-900 mb-4"></div>
+        <h2 class="text-xl font-bold text-blue-900 tracking-wider" id="loaderText">Connecting to Server...</h2>
     </div>
 
     <!-- Login -->
-    <div id="loginSection" class="bg-white p-6 md:p-8 rounded-lg shadow-lg w-full max-w-md text-center hidden">
-        <img src="logo.png" class="mx-auto h-20 w-20 mb-4" onerror="this.src='https://via.placeholder.com/80'">
-        <h2 class="text-xl md:text-2xl font-bold text-blue-900 mb-2">MTSE <span class="dyn-year"></span></h2>
-        <h3 class="text-lg font-semibold text-gray-700 mb-6">Download Admit Card</h3>
-        <div class="text-left mb-4"><label class="block text-sm font-bold text-gray-700 mb-1">Registration Number:</label><input type="text" id="regNoInput" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-600"></div>
-        <div class="text-left mb-6"><label class="block text-sm font-bold text-gray-700 mb-1">Date of Birth:</label><input type="date" id="dobInput" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-600"></div>
-        <button id="searchBtn" onclick="fetchAdmit()" class="w-full bg-blue-900 text-white font-bold py-3 rounded shadow hover:bg-blue-800 transition">Search & Download</button>
-        <p id="msgBox" class="mt-4 font-bold text-sm hidden"></p>
+    <div id="loginSection" class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-center hidden border border-gray-200">
+        <img src="logo.png" class="mx-auto h-24 w-24 mb-4 shadow-sm p-1 rounded-full border border-gray-200" onerror="this.src='https://via.placeholder.com/80'">
+        <h2 class="text-2xl font-extrabold text-blue-900 mb-1 drop-shadow-sm">MTSE <span class="dyn-year"></span></h2>
+        <h3 class="text-md font-bold text-gray-600 mb-6 bg-gray-100 py-1 rounded">DOWNLOAD ADMIT CARD</h3>
+        <div class="text-left mb-4"><label class="block text-sm font-extrabold text-blue-900 mb-1">REGISTRATION NUMBER:</label><input type="text" id="regNoInput" class="w-full border-2 border-gray-300 p-3 rounded-lg outline-none focus:border-blue-600 font-bold"></div>
+        <div class="text-left mb-6"><label class="block text-sm font-extrabold text-blue-900 mb-1">DATE OF BIRTH:</label><input type="date" id="dobInput" class="w-full border-2 border-gray-300 p-3 rounded-lg outline-none focus:border-blue-600 font-bold"></div>
+        <button id="searchBtn" onclick="fetchAdmit()" class="w-full bg-gradient-to-r from-blue-800 to-blue-900 text-white font-extrabold py-4 rounded-lg shadow-lg hover:scale-105 transition-all">SEARCH & DOWNLOAD</button>
+        <p id="msgBox" class="mt-4 font-bold text-sm hidden p-2 rounded"></p>
     </div>
 
-    <!-- Print Section -->
-    <div id="printSection" class="hidden w-full max-w-3xl border-2 border-gray-800 bg-white p-4 md:p-6 mt-4 relative">
-        <div class="no-print absolute top-[-50px] right-0 flex gap-2">
-            <button onclick="window.print()" class="bg-green-600 text-white font-bold px-4 py-2 rounded shadow">Print Admit</button>
-            <button onclick="location.reload()" class="bg-gray-800 text-white font-bold px-4 py-2 rounded shadow">Back</button>
+    <!-- Print Section (Advanced UI) -->
+    <div id="printSection" class="hidden w-full max-w-3xl bg-white border-8 border-double border-blue-900 p-6 relative rounded-xl shadow-xl mt-4">
+        <div class="no-print absolute top-[-60px] right-0 flex gap-2">
+            <button onclick="window.print()" class="bg-blue-700 text-white font-bold px-6 py-2 rounded shadow hover:bg-blue-800">Print Admit</button>
+            <button onclick="location.reload()" class="bg-gray-800 text-white font-bold px-6 py-2 rounded shadow hover:bg-gray-900">Back</button>
         </div>
         
-        <div class="flex justify-between items-center border-b-4 border-blue-900 pb-4 mb-4 mt-8 md:mt-0">
-            <img src="logo.png" class="h-16 w-16 md:h-20 md:w-20" onerror="this.src='https://via.placeholder.com/80'">
-            <div class="text-center flex-1">
-                <h1 class="text-lg md:text-2xl font-extrabold text-blue-900 tracking-wide">MAHARISHI TALENT SEARCH EXAMINATION</h1>
-                <h2 class="text-md md:text-xl font-bold mt-1"><span class="dyn-year"></span></h2>
-                <h3 class="text-sm md:text-lg font-bold bg-gray-800 text-white inline-block px-4 md:px-6 py-1 mt-2 rounded-full">ADMIT CARD</h3>
-            </div>
-            <div class="h-24 w-20 md:h-28 md:w-24 border-2 border-dashed border-gray-400 flex items-center justify-center text-xs text-center text-gray-500">Paste Recent<br>Photo</div>
+        <!-- Watermark setup (optional) -->
+        <div class="absolute inset-0 opacity-5 flex items-center justify-center pointer-events-none z-0">
+            <img src="logo.png" class="w-96 h-96" onerror="this.style.display='none'">
         </div>
 
-        <div class="flex flex-col md:flex-row justify-between mb-6 gap-4 md:gap-0">
-            <div class="space-y-2 text-xs md:text-sm flex-1">
-                <p><span class="font-bold inline-block w-28 md:w-32">NAME:</span> <span id="admitName" class="uppercase font-bold text-sm md:text-base"></span></p>
-                <p><span class="font-bold inline-block w-28 md:w-32">FATHER'S NAME:</span> <span id="admitFName" class="uppercase"></span></p>
-                <p><span class="font-bold inline-block w-28 md:w-32">CLASS & SEC:</span> Class <span id="admitClass"></span> (<span id="admitSec"></span>)</p>
-                <p><span class="font-bold inline-block w-28 md:w-32">ROLL NO:</span> <span id="admitRoll"></span></p>
-                <p><span class="font-bold inline-block w-28 md:w-32">LEVEL:</span> <span id="admitLevel"></span></p>
-                <p><span class="font-bold inline-block w-28 md:w-32">GENDER:</span> <span id="admitGender"></span></p>
+        <div class="flex justify-between items-center border-b-4 border-blue-900 pb-4 mb-4 relative z-10">
+            <img src="logo.png" class="h-24 w-24 object-contain" onerror="this.src='https://via.placeholder.com/80'">
+            <div class="text-center flex-1 px-2">
+                <h1 class="text-2xl md:text-3xl font-extrabold text-blue-900 tracking-wider" style="text-shadow: 1px 1px 0px #ccc;">MAHARISHI TALENT SEARCH EXAMINATION</h1>
+                <h2 class="text-xl font-bold mt-1 text-gray-800"><span class="dyn-year"></span></h2>
+                <h3 class="text-lg font-bold bg-blue-900 text-white inline-block px-8 py-1 mt-2 rounded-lg shadow-md border-2 border-white outline outline-2 outline-blue-900">ADMIT CARD</h3>
             </div>
-            <div class="text-left md:text-right flex flex-col md:items-end justify-start">
-                <div class="bg-gray-100 p-2 border border-gray-300 rounded mb-2 w-full md:w-48 text-center">
-                    <p class="text-[10px] md:text-xs font-bold text-gray-600 mb-1">REGISTRATION NO</p>
-                    <p id="admitRegNoTxt" class="text-base md:text-lg font-extrabold text-blue-900"></p>
+            <div class="h-32 w-28 border-2 border-gray-800 flex items-center justify-center text-xs text-center text-gray-500 bg-gray-50 shadow-inner">Paste Recent<br>Passport<br>Photo</div>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-between mb-6 relative z-10 gap-4 md:gap-0">
+            <div class="space-y-3 text-sm flex-1 md:pr-4">
+                <p class="border-b border-gray-300 pb-1"><span class="font-bold inline-block w-32 md:w-36 text-blue-900">STUDENT NAME</span> <span class="font-extrabold text-base md:text-lg">: <span id="admitName" class="uppercase"></span></span></p>
+                <p class="border-b border-gray-300 pb-1"><span class="font-bold inline-block w-32 md:w-36 text-blue-900">FATHER'S NAME</span> <span class="font-bold">: <span id="admitFName" class="uppercase"></span></span></p>
+                <div class="flex gap-2 md:gap-4 border-b border-gray-300 pb-1">
+                    <p class="flex-1"><span class="font-bold inline-block w-24 md:w-36 text-blue-900">CLASS & SEC</span> <span class="font-bold">: Class <span id="admitClass"></span> (<span id="admitSec"></span>)</span></p>
+                    <p class="flex-1"><span class="font-bold text-blue-900">ROLL NO:</span> <span class="font-bold" id="admitRoll"></span></p>
+                </div>
+                <p class="border-b border-gray-300 pb-1"><span class="font-bold inline-block w-32 md:w-36 text-blue-900">EXAM LEVEL</span> <span class="font-bold bg-yellow-200 px-2 rounded">: <span id="admitLevel"></span></span></p>
+                <p class="border-b border-gray-300 pb-1"><span class="font-bold inline-block w-32 md:w-36 text-blue-900">GENDER</span> <span class="font-bold">: <span id="admitGender"></span></span></p>
+            </div>
+            <div class="text-left md:text-right flex flex-col md:items-center justify-start ml-0 md:ml-2">
+                <div class="bg-gray-100 p-2 border-2 border-gray-400 rounded-lg mb-2 w-full md:w-56 text-center shadow-sm">
+                    <p class="text-[10px] md:text-xs font-extrabold text-gray-700 tracking-widest mb-1">REGISTRATION NO</p>
+                    <p id="admitRegNoTxt" class="text-xl md:text-2xl font-black text-blue-900 tracking-widest"></p>
                 </div>
                 <svg id="barcode" class="max-w-full"></svg>
             </div>
         </div>
 
-        <div class="border-2 border-gray-800 rounded p-3 md:p-4 bg-blue-50">
-            <h4 class="font-bold text-center underline mb-3 text-sm md:text-base">EXAMINATION DETAILS</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 text-xs md:text-sm font-semibold">
-                <div><span class="text-gray-700">Date:</span> <span class="dyn-date"></span></div>
-                <div><span class="text-gray-700">Reporting Time:</span> <span class="dyn-repTime"></span></div>
-                <div><span class="text-gray-700">Exam Time:</span> <span class="dyn-exTime"></span></div>
-                <div><span class="text-gray-700">Venue:</span> <span class="dyn-venue"></span></div>
+        <div class="border-2 border-blue-900 rounded-lg p-3 md:p-4 bg-blue-50 relative z-10 shadow-sm">
+            <h4 class="font-extrabold text-center text-blue-900 bg-white inline-block px-4 py-1 rounded border border-blue-900 mx-auto -mt-6 md:-mt-7 mb-3 shadow text-sm md:text-base">EXAMINATION DETAILS</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 text-xs md:text-sm font-bold text-gray-800">
+                <div><span class="text-blue-900">Date:</span> <span class="dyn-date bg-white px-1 rounded"></span></div>
+                <div><span class="text-blue-900">Reporting Time:</span> <span class="dyn-repTime bg-white px-1 rounded"></span></div>
+                <div><span class="text-blue-900">Exam Time:</span> <span class="dyn-exTime bg-white px-1 rounded"></span></div>
+                <div><span class="text-blue-900">Venue:</span> <span class="dyn-venue bg-white px-1 rounded"></span></div>
             </div>
-            <div class="mt-2 text-xs md:text-sm"><span class="font-bold text-gray-700">Venue Address:</span> <span class="dyn-address"></span></div>
+            <div class="mt-3 text-xs md:text-sm font-bold text-gray-800 border-t border-blue-200 pt-2"><span class="text-blue-900">Venue Address:</span> <span class="dyn-address"></span></div>
         </div>
 
-        <div class="mt-16 md:mt-20 flex justify-between text-[10px] md:text-sm font-bold text-gray-800">
-            <div class="text-center w-24 md:w-40 border-t border-black pt-2">CANDIDATE SIGN</div>
-            <div class="text-center w-24 md:w-40 border-t border-black pt-2">INVIGILATOR SIGN</div>
-            <div class="text-center w-24 md:w-40 border-t border-black pt-2 relative">
-                <img src="sign.png" class="absolute bottom-6 left-0 right-0 mx-auto h-8 md:h-10 object-contain" onerror="this.style.display='none'">
+        <div class="mt-6 text-xs relative z-10 border border-gray-300 p-3 rounded bg-gray-50">
+            <h4 class="font-extrabold mb-2 text-red-700 underline">IMPORTANT INSTRUCTIONS:</h4>
+            <ul class="list-disc pl-5 space-y-1 text-justify font-semibold">
+                <li>Arrive at the examination venue at least 30 minutes prior to the start time.</li>
+                <li>Bring this Admit Card and a valid Photo ID for verification without fail.</li>
+                <li>Use ONLY Black or Blue ballpoint pen. Electronic devices are strictly prohibited.</li>
+            </ul>
+        </div>
+
+        <div class="mt-20 md:mt-24 flex justify-between text-[10px] md:text-sm font-extrabold text-gray-800 relative z-10">
+            <div class="text-center w-24 md:w-40 border-t-2 border-black pt-2">CANDIDATE SIGN</div>
+            <div class="text-center w-24 md:w-40 border-t-2 border-black pt-2">INVIGILATOR SIGN</div>
+            <div class="text-center w-32 md:w-48 border-t-2 border-black pt-2 relative">
+                <img src="sign.png" class="absolute bottom-6 left-0 right-0 mx-auto h-16 md:h-20 object-contain" onerror="this.style.display='none'">
                 PRINCIPAL SIGN
             </div>
         </div>
     </div>
 
     <script>
-        // আপোনাৰ Firebase Config ইয়াত দিয়া হৈছে
         const firebaseConfig = {
             apiKey: "AIzaSyCG00CkuMozSfVCnB9qU42DsbLVmI3y9dg",
             authDomain: "mtse2026-805a0.firebaseapp.com",
@@ -120,7 +136,11 @@
                 }
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('loginSection').classList.remove('hidden');
-            } catch(e) { document.getElementById('loaderText').innerText = "Failed to Connect to Database!"; }
+            } catch(e) { 
+                let lText = document.getElementById('loaderText');
+                lText.innerText = "Failed to Connect!";
+                lText.className = "text-red-600 font-bold text-xl";
+            }
         };
 
         async function fetchAdmit() {
@@ -129,8 +149,12 @@
             let msg = document.getElementById('msgBox');
             let btn = document.getElementById('searchBtn');
 
-            if(!reg || !dob) { msg.innerText = "Enter both Registration No & DOB"; msg.className = "mt-4 text-red-600 font-bold block"; return; }
-            btn.innerText = "Searching..."; btn.disabled = true;
+            if(!reg || !dob) { 
+                msg.innerText = "Please enter both Registration No & DOB"; 
+                msg.className = "mt-4 text-red-700 font-bold block bg-red-100 border border-red-300 p-2 rounded"; 
+                return; 
+            }
+            btn.innerText = "SEARCHING..."; btn.disabled = true;
 
             try {
                 let doc = await db.collection("mtse_students").doc(reg).get();
@@ -148,20 +172,21 @@
                     document.getElementById('admitLevel').innerText = s.level;
                     document.getElementById('admitGender').innerText = s.gender;
                     document.getElementById('admitRegNoTxt').innerText = s.regNo;
-                    JsBarcode("#barcode", s.regNo.toString(), {format:"CODE128", width:2, height:30, displayValue:false});
+                    // বাৰকোড ডাঙৰ কৰা হৈছে (height: 70)
+                    JsBarcode("#barcode", s.regNo.toString(), {format:"CODE128", width: 2.5, height: 70, displayValue: false});
                     
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('printSection').style.display = 'block';
                 } else {
-                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school.";
-                    msg.className = "mt-4 text-orange-600 font-bold block";
+                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school administration.";
+                    msg.className = "mt-4 text-orange-800 font-bold block bg-orange-100 border border-orange-300 p-2 rounded";
                 }
             } catch(e) { 
-                msg.innerText = "Invalid Details or Not Found!"; 
-                msg.className = "mt-4 text-red-600 font-bold block"; 
+                msg.innerText = "Invalid Details or Record Not Found!"; 
+                msg.className = "mt-4 text-red-700 font-bold block bg-red-100 border border-red-300 p-2 rounded"; 
             }
             
-            btn.innerText = "Search & Download"; btn.disabled = false;
+            btn.innerText = "SEARCH & DOWNLOAD"; btn.disabled = false;
         }
     </script>
 </body>
