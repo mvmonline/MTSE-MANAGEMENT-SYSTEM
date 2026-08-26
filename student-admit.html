@@ -11,10 +11,29 @@
     <style>
         @media print {
             @page { size: A4 portrait; margin: 5mm; }
-            body { background: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
-            .no-print, #loginSection { display: none !important; } 
-            /* border: none; আঁতৰাই দিয়া হৈছে যাতে বৰ্ডাৰ ধুনীয়াকৈ আহে */
-            #printSection { display: flex !important; width: 100%; max-width: 100%; height: 287mm; margin: 0; box-shadow: none; overflow: hidden; page-break-inside: avoid; }
+            html, body { 
+                background: white !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            } 
+            .no-print, #loginSection, #loader { display: none !important; } 
+            
+            /* প্ৰিণ্টৰ বাবে বৰ্ডাৰ আৰু পেজৰ জোখ ১০০% নিশ্চিত কৰা হৈছে */
+            #printSection { 
+                display: flex !important; 
+                width: 100% !important; 
+                max-width: 100% !important;
+                height: 280mm !important; /* পেজ ফটা ৰোধ কৰিবলৈ জোখটো কমোৱা হৈছে */
+                border: 12px double #1e3a8a !important; /* বৰ্ডাৰটো Forcefully দিয়া হৈছে */
+                border-radius: 16px !important;
+                box-sizing: border-box !important;
+                margin: 0 auto !important; 
+                box-shadow: none !important; 
+                overflow: hidden !important; 
+                page-break-inside: avoid !important;
+            }
         }
         input { text-transform: uppercase; }
     </style>
@@ -25,7 +44,7 @@
         <h2 class="text-xl font-bold text-blue-900" id="loaderText">Connecting to Server...</h2>
     </div>
 
-    <!-- Login UI -->
+    <!-- Login UI Beautified -->
     <div id="loginSection" class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.2)] w-full max-w-md text-center hidden border-t-8 border-blue-900 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-32 bg-blue-50 -z-10 rounded-b-full"></div>
         <img src="logo.png" class="mx-auto h-24 w-24 mb-4 shadow-md p-1.5 rounded-full bg-white border border-gray-200" onerror="this.src='https://via.placeholder.com/80'">
@@ -44,8 +63,8 @@
         <p id="msgBox" class="mt-5 font-bold text-sm hidden p-3 rounded-lg shadow-sm"></p>
     </div>
 
-    <!-- Print Section (A4 EXACT FIT with Double Border) -->
-    <div id="printSection" class="hidden flex-col bg-white border-[12px] border-double border-blue-900 p-6 rounded-2xl relative w-full max-w-4xl h-[287mm]">
+    <!-- Print Section -->
+    <div id="printSection" class="hidden flex-col bg-white border-[12px] border-double border-blue-900 p-6 rounded-2xl relative w-full max-w-3xl h-[287mm]">
         <div class="no-print absolute top-[-60px] right-0 flex gap-2">
             <button onclick="window.print()" class="bg-blue-700 text-white font-bold px-6 py-2 rounded shadow hover:bg-blue-800">Print Admit</button>
             <button onclick="location.reload()" class="bg-gray-800 text-white font-bold px-6 py-2 rounded shadow hover:bg-gray-900">Back</button>
