@@ -13,7 +13,7 @@
             @page { size: A4 portrait; margin: 5mm; }
             body { background: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
             .no-print, #loginSection { display: none !important; } 
-            #printSection { display: block !important; width: 100%; height: 287mm; border: none; padding: 0; box-shadow: none; overflow: hidden;}
+            #printSection { display: flex !important; width: 100%; height: 287mm; border: none; padding: 0; box-shadow: none; overflow: hidden; margin:0;}
         }
         input { text-transform: uppercase; }
     </style>
@@ -35,72 +35,69 @@
         <p id="msgBox" class="mt-4 font-bold text-sm hidden p-2 rounded"></p>
     </div>
 
-    <!-- Print Section (A4 EXACT FIT) -->
-    <div id="printSection" class="hidden w-full max-w-3xl bg-white border-4 border-blue-900 p-6 relative rounded-xl shadow-xl mt-4 flex-col h-[287mm]">
+    <!-- Print Section (A4 EXACT FIT, INSTRUCTIONS AT BOTTOM) -->
+    <div id="printSection" class="hidden flex-col bg-white border-[12px] border-double border-blue-900 p-6 rounded-2xl relative w-full max-w-3xl h-[287mm]">
         <div class="no-print absolute top-[-60px] right-0 flex gap-2">
             <button onclick="window.print()" class="bg-blue-700 text-white font-bold px-6 py-2 rounded shadow hover:bg-blue-800">Print Admit</button>
             <button onclick="location.reload()" class="bg-gray-800 text-white font-bold px-6 py-2 rounded shadow hover:bg-gray-900">Back</button>
         </div>
         
-        <!-- Header -->
         <div class="text-center mb-4">
             <img src="logo.png" class="h-14 w-14 mx-auto object-contain mb-1" onerror="this.src='https://via.placeholder.com/60'">
             <h1 class="text-2xl font-extrabold text-blue-900 tracking-wide">MAHARISHI TALENT SEARCH EXAMINATION <span class="dyn-year"></span></h1>
             <h2 class="text-lg font-extrabold mt-2 bg-blue-900 text-white inline-block px-6 py-1 rounded shadow-md">ADMIT CARD</h2>
         </div>
 
-        <!-- Info & Photo -->
         <div class="flex justify-between items-start mt-4 border-t-2 border-blue-100 pt-4 flex-grow-0">
             <div class="space-y-3 text-sm font-bold w-3/4 text-gray-800">
                 <p><span class="text-blue-900 w-32 inline-block">STUDENT NAME</span> : <span id="admitName" class="text-black text-base uppercase"></span></p>
                 <p><span class="text-blue-900 w-32 inline-block">FATHER'S NAME</span> : <span id="admitFName" class="uppercase"></span></p>
                 <p><span class="text-blue-900 w-32 inline-block">GENDER</span> : <span id="admitGender"></span></p>
                 <p><span class="text-blue-900 w-32 inline-block">CLASS & SEC</span> : Class <span id="admitClass"></span> (<span id="admitSec"></span>)</p>
-                <p><span class="text-blue-900 w-32 inline-block">LEVEL</span> : <span id="admitLevel" class="bg-yellow-200 px-1 rounded"></span></p>
+                <p><span class="text-blue-900 w-32 inline-block">LEVEL</span> : <span id="admitLevel" class="bg-yellow-200 px-1 rounded text-black"></span></p>
             </div>
             <div class="w-1/4 flex justify-end">
                 <div class="h-32 w-28 border-2 border-blue-900 flex items-center justify-center text-xs text-center text-gray-500 bg-gray-50">Paste Photo</div>
             </div>
         </div>
 
-        <!-- Barcode Centered -->
         <div class="text-center my-6 flex-grow-0">
             <svg id="barcode" class="mx-auto"></svg>
         </div>
 
-        <!-- Exam Details -->
         <div class="mt-2 border-2 border-blue-900 p-4 rounded-lg bg-blue-50 relative flex-grow-0">
             <h3 class="font-extrabold text-blue-900 bg-white px-3 py-0.5 border border-blue-900 rounded absolute -top-4 left-1/2 transform -translate-x-1/2">EXAMINATION DETAILS</h3>
             <div class="text-sm font-bold space-y-2 mt-2 text-gray-800">
-                <p><span class="text-blue-900">REGISTRATION NO:</span> <span id="admitRegNoTxt" class="font-black text-lg ml-1 bg-white px-2 py-0.5 border rounded shadow-sm text-blue-900"></span></p>
+                <p><span class="text-blue-900">REGISTRATION NO:</span> <span id="admitRegNoTxt" class="font-black text-lg ml-1 bg-white px-2 py-0.5 border border-gray-300 rounded shadow-sm text-blue-900"></span></p>
                 <div class="grid grid-cols-2 gap-2 mt-2">
-                    <p><span class="text-blue-900">Exam Date:</span> <span class="dyn-date bg-white px-1 rounded"></span></p>
-                    <p><span class="text-blue-900">Reporting Time:</span> <span class="dyn-repTime bg-white px-1 rounded"></span></p>
-                    <p><span class="text-blue-900">Exam Time:</span> <span class="dyn-exTime bg-white px-1 rounded"></span></p>
-                    <p><span class="text-blue-900">Venue:</span> <span class="dyn-venue bg-white px-1 rounded"></span></p>
+                    <p><span class="text-blue-900">Exam Date:</span> <span class="dyn-date bg-white px-1 rounded border border-gray-200"></span></p>
+                    <p><span class="text-blue-900">Reporting Time:</span> <span class="dyn-repTime bg-white px-1 rounded border border-gray-200"></span></p>
+                    <p><span class="text-blue-900">Exam Time:</span> <span class="dyn-exTime bg-white px-1 rounded border border-gray-200"></span></p>
+                    <p><span class="text-blue-900">Venue:</span> <span class="dyn-venue bg-white px-1 rounded border border-gray-200"></span></p>
                 </div>
                 <p class="mt-2 border-t border-blue-200 pt-2"><span class="text-blue-900">Venue Address:</span> <span class="dyn-address"></span></p>
             </div>
         </div>
 
-        <!-- Instructions -->
-        <div class="mt-6 text-xs font-bold bg-gray-50 border border-gray-300 p-3 rounded flex-grow-0">
-            <h4 class="font-extrabold mb-1 text-red-700 underline">IMPORTANT INSTRUCTIONS:</h4>
-            <ul class="list-disc pl-5 space-y-0.5">
-                <li>ARRIVE AT THE VENUE AT LEAST 30 MINUTES PRIOR TO START.</li>
-                <li>BRING YOUR ADMIT CARD AND A VALID PHOTO ID FOR VERIFICATION.</li>
-                <li>ELECTRONIC DEVICES ARE STRICTLY PROHIBITED.</li>
-                <li>USE ONLY BLACK OR BLUE BALLPOINT PEN.</li>
-            </ul>
-        </div>
+        <div class="flex-grow"></div> 
 
-        <!-- Signatures (pushed to bottom) -->
-        <div class="mt-auto flex justify-between text-xs font-extrabold text-gray-800 pb-2 flex-grow-0">
-            <div class="text-center w-40 border-t-2 border-black pt-1">SIGNATURE OF CANDIDATE</div>
-            <div class="text-center w-40 border-t-2 border-black pt-1">SIGNATURE OF INVIGILATOR</div>
-            <div class="text-center w-48 relative">
-                <img src="sign.png" class="absolute bottom-6 left-0 right-0 mx-auto h-16 object-contain" onerror="this.style.display='none'">
-                <p class="border-t-2 border-black pt-1">PRINCIPAL SIGNATURE</p>
+        <div class="mt-auto">
+            <div class="flex justify-between text-xs font-extrabold text-gray-800 pb-4 mb-4 border-b-2 border-gray-300">
+                <div class="text-center w-40 border-t-2 border-black pt-1 mt-12">SIGNATURE OF CANDIDATE</div>
+                <div class="text-center w-40 border-t-2 border-black pt-1 mt-12">SIGNATURE OF INVIGILATOR</div>
+                <div class="text-center w-48 relative">
+                    <img src="sign.png" class="absolute bottom-8 left-0 right-0 mx-auto h-16 object-contain" onerror="this.style.display='none'">
+                    <p class="border-t-2 border-black pt-1 mt-12">PRINCIPAL SIGNATURE</p>
+                </div>
+            </div>
+            <div class="text-xs font-bold bg-gray-50 border border-gray-300 p-3 rounded">
+                <h4 class="font-extrabold mb-1 text-red-700 underline">IMPORTANT INSTRUCTIONS:</h4>
+                <ul class="list-disc pl-5 space-y-0.5">
+                    <li>ARRIVE AT THE VENUE AT LEAST 30 MINUTES PRIOR TO START.</li>
+                    <li>BRING YOUR ADMIT CARD AND A VALID PHOTO ID FOR VERIFICATION.</li>
+                    <li>ELECTRONIC DEVICES ARE STRICTLY PROHIBITED.</li>
+                    <li>USE ONLY BLACK OR BLUE BALLPOINT PEN.</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -145,7 +142,6 @@
 
                 if(s.admitStatus === "Released") {
                     document.getElementById('admitName').innerText = s.studentName; document.getElementById('admitFName').innerText = s.fatherName; document.getElementById('admitClass').innerText = s.class; document.getElementById('admitSec').innerText = s.section; document.getElementById('admitLevel').innerText = s.level; document.getElementById('admitGender').innerText = s.gender; document.getElementById('admitRegNoTxt').innerText = s.regNo;
-                    // বাৰকোড ডাঙৰকৈ (height: 60)
                     JsBarcode("#barcode", s.regNo.toString(), {format:"CODE128", width:2.5, height:60, displayValue:false});
                     
                     document.getElementById('loginSection').style.display = 'none'; document.getElementById('printSection').style.display = 'flex';
