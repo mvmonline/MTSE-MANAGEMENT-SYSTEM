@@ -13,7 +13,8 @@
             @page { size: A4 portrait; margin: 5mm; }
             body { background: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
             .no-print, #loginSection { display: none !important; } 
-            #printSection { display: flex !important; width: 100%; height: 287mm; margin: 0; box-shadow: none; border: none; overflow: hidden; page-break-inside: avoid;}
+            /* border: none; আঁতৰাই দিয়া হৈছে যাতে বৰ্ডাৰ ধুনীয়াকৈ আহে */
+            #printSection { display: flex !important; width: 100%; max-width: 100%; height: 287mm; margin: 0; box-shadow: none; overflow: hidden; page-break-inside: avoid; }
         }
         input { text-transform: uppercase; }
     </style>
@@ -24,7 +25,7 @@
         <h2 class="text-xl font-bold text-blue-900" id="loaderText">Connecting to Server...</h2>
     </div>
 
-    <!-- Login UI Beautified -->
+    <!-- Login UI -->
     <div id="loginSection" class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.2)] w-full max-w-md text-center hidden border-t-8 border-blue-900 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-32 bg-blue-50 -z-10 rounded-b-full"></div>
         <img src="logo.png" class="mx-auto h-24 w-24 mb-4 shadow-md p-1.5 rounded-full bg-white border border-gray-200" onerror="this.src='https://via.placeholder.com/80'">
@@ -44,7 +45,7 @@
     </div>
 
     <!-- Print Section (A4 EXACT FIT with Double Border) -->
-    <div id="printSection" class="hidden flex-col bg-white border-[12px] border-double border-blue-900 p-6 rounded-2xl relative w-full max-w-3xl h-[287mm]">
+    <div id="printSection" class="hidden flex-col bg-white border-[12px] border-double border-blue-900 p-6 rounded-2xl relative w-full max-w-4xl h-[287mm]">
         <div class="no-print absolute top-[-60px] right-0 flex gap-2">
             <button onclick="window.print()" class="bg-blue-700 text-white font-bold px-6 py-2 rounded shadow hover:bg-blue-800">Print Admit</button>
             <button onclick="location.reload()" class="bg-gray-800 text-white font-bold px-6 py-2 rounded shadow hover:bg-gray-900">Back</button>
@@ -149,14 +150,25 @@
                 if (s.dob !== dob) { throw "Invalid DOB"; }
 
                 if(s.admitStatus === "Released") {
-                    document.getElementById('admitName').innerText = s.studentName; document.getElementById('admitFName').innerText = s.fatherName; document.getElementById('admitClass').innerText = s.class; document.getElementById('admitSec').innerText = s.section; document.getElementById('admitLevel').innerText = s.level; document.getElementById('admitGender').innerText = s.gender; document.getElementById('admitRegNoTxt').innerText = s.regNo;
+                    document.getElementById('admitName').innerText = s.studentName; 
+                    document.getElementById('admitFName').innerText = s.fatherName; 
+                    document.getElementById('admitClass').innerText = s.class; 
+                    document.getElementById('admitSec').innerText = s.section; 
+                    document.getElementById('admitLevel').innerText = s.level; 
+                    document.getElementById('admitGender').innerText = s.gender; 
+                    document.getElementById('admitRegNoTxt').innerText = s.regNo;
                     JsBarcode("#barcode", s.regNo.toString(), {format:"CODE128", width:2.5, height:60, displayValue:false});
                     
-                    document.getElementById('loginSection').style.display = 'none'; document.getElementById('printSection').style.display = 'flex';
+                    document.getElementById('loginSection').style.display = 'none'; 
+                    document.getElementById('printSection').style.display = 'flex';
                 } else {
-                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school."; msg.className = "mt-4 text-orange-800 font-bold block bg-orange-100 p-2 rounded";
+                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school."; 
+                    msg.className = "mt-4 text-orange-800 font-bold block bg-orange-100 p-2 rounded";
                 }
-            } catch(e) { msg.innerText = "Invalid Details or Record Not Found!"; msg.className = "mt-4 text-red-700 font-bold block bg-red-100 p-2 rounded"; }
+            } catch(e) { 
+                msg.innerText = "Invalid Details or Record Not Found!"; 
+                msg.className = "mt-4 text-red-700 font-bold block bg-red-100 p-2 rounded"; 
+            }
             
             btn.innerText = "DOWNLOAD"; btn.disabled = false;
         }
