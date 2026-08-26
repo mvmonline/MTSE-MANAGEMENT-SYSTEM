@@ -9,66 +9,49 @@
     <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore-compat.js"></script>
     <style>
+        /* এডমিনৰ পেজৰ একেই প্ৰিণ্ট CSS ইয়াত ব্যৱহাৰ কৰা হৈছে */
         @media print {
-            @page { size: A4 portrait; margin: 10mm; } /* মাৰ্জিন বঢ়োৱা হৈছে যাতে বৰ্ডাৰ কটা নাযায় */
-            html, body { 
-                background: white !important; 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important; 
-            } 
-            .no-print, #loginSection, #loader { display: none !important; } 
-            
-            /* বৰ্ডাৰ প্ৰিণ্ট হোৱাটো ১০০% নিশ্চিত কৰিবলৈ নতুন CSS */
-            #printSection { 
-                display: flex !important; 
-                flex-direction: column !important;
-                width: 100% !important; 
-                max-width: 100% !important;
-                height: 270mm !important; /* উচ্চতা কমোৱা হৈছে যাতে এখন পেজত সম্পূৰ্ণ খাপ খায় */
-                border: 10px double #1e3a8a !important; /* বৰ্ডাৰক Forcefully দিয়া হৈছে */
-                border-radius: 16px !important;
-                box-sizing: border-box !important;
-                margin: 0 auto !important; 
-                padding: 24px !important; /* ভিতৰৰ অংশ অলপ এৰি দিয়া হৈছে */
-                box-shadow: none !important; 
-                overflow: hidden !important; 
-                page-break-inside: avoid !important;
-            }
+            @page { size: A4 portrait; margin: 5mm; }
+            body { background: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
+            body > div:not(.print-active) { display: none !important; }
+            .print-active { display: flex !important; width: 100%; height: 287mm; border: none; padding: 0; margin: 0; box-shadow: none; overflow: hidden;}
         }
         input { text-transform: uppercase; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen p-4 flex flex-col items-center justify-center font-sans">
+<body class="bg-gray-100 font-sans">
 
-    <div id="loader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
-        <h2 class="text-xl font-bold text-blue-900" id="loaderText">Connecting to Server...</h2>
-    </div>
-
-    <!-- Login UI Beautified -->
-    <div id="loginSection" class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.2)] w-full max-w-md text-center hidden border-t-8 border-blue-900 relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-32 bg-blue-50 -z-10 rounded-b-full"></div>
-        <img src="logo.png" class="mx-auto h-24 w-24 mb-4 shadow-md p-1.5 rounded-full bg-white border border-gray-200" onerror="this.src='https://via.placeholder.com/80'">
-        <h2 class="text-3xl font-black text-blue-900 mb-1 drop-shadow-sm tracking-wider">MTSE <span class="dyn-year"></span></h2>
-        <h3 class="text-sm font-extrabold text-white mb-8 bg-blue-600 py-1.5 px-4 rounded-full inline-block shadow-md tracking-widest">ADMIT CARD PORTAL</h3>
+    <!-- UI Layer (ইয়াত ছাত্ৰ-ছাত্ৰীয়ে লগ-ইন কৰিব) -->
+    <div id="ui-layer" class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-gray-100">
         
-        <div class="text-left mb-5">
-            <label class="block text-xs font-black text-gray-500 mb-1 tracking-widest uppercase">Registration Number</label>
-            <input type="text" id="regNoInput" placeholder="Enter Reg No." class="w-full border-2 border-gray-300 p-3.5 rounded-lg outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold text-gray-800 transition-all text-lg text-center tracking-widest">
+        <div id="loader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
+            <h2 class="text-xl font-bold text-blue-900" id="loaderText">Connecting to Server...</h2>
         </div>
-        <div class="text-left mb-8">
-            <label class="block text-xs font-black text-gray-500 mb-1 tracking-widest uppercase">Date of Birth</label>
-            <input type="date" id="dobInput" class="w-full border-2 border-gray-300 p-3.5 rounded-lg outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold text-gray-800 transition-all text-center">
+
+        <div id="loginSection" class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.2)] w-full max-w-md text-center border-t-8 border-blue-900 relative overflow-hidden hidden">
+            <div class="absolute top-0 left-0 w-full h-32 bg-blue-50 -z-10 rounded-b-full"></div>
+            <img src="logo.png" class="mx-auto h-24 w-24 mb-4 shadow-md p-1.5 rounded-full bg-white border border-gray-200" onerror="this.src='https://via.placeholder.com/80'">
+            <h2 class="text-3xl font-black text-blue-900 mb-1 drop-shadow-sm tracking-wider">MTSE <span class="dyn-year"></span></h2>
+            <h3 class="text-sm font-extrabold text-white mb-8 bg-blue-600 py-1.5 px-4 rounded-full inline-block shadow-md tracking-widest">ADMIT CARD PORTAL</h3>
+            
+            <div class="text-left mb-5">
+                <label class="block text-xs font-black text-gray-500 mb-1 tracking-widest uppercase">Registration Number</label>
+                <input type="text" id="regNoInput" placeholder="Enter Reg No." class="w-full border-2 border-gray-300 p-3.5 rounded-lg outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold text-gray-800 transition-all text-lg text-center tracking-widest">
+            </div>
+            <div class="text-left mb-8">
+                <label class="block text-xs font-black text-gray-500 mb-1 tracking-widest uppercase">Date of Birth</label>
+                <input type="date" id="dobInput" class="w-full border-2 border-gray-300 p-3.5 rounded-lg outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-bold text-gray-800 transition-all text-center">
+            </div>
+            <button id="searchBtn" onclick="fetchAdmit()" class="w-full bg-gradient-to-r from-blue-800 to-blue-900 text-white font-black py-4 rounded-xl shadow-[0_10px_20px_rgba(30,58,138,0.3)] hover:shadow-[0_15px_30px_rgba(30,58,138,0.4)] hover:-translate-y-1 transition-all duration-300 tracking-widest text-lg">DOWNLOAD</button>
+            <p id="msgBox" class="mt-5 font-bold text-sm hidden p-3 rounded-lg shadow-sm"></p>
         </div>
-        <button id="searchBtn" onclick="fetchAdmit()" class="w-full bg-gradient-to-r from-blue-800 to-blue-900 text-white font-black py-4 rounded-xl shadow-[0_10px_20px_rgba(30,58,138,0.3)] hover:shadow-[0_15px_30px_rgba(30,58,138,0.4)] hover:-translate-y-1 transition-all duration-300 tracking-widest text-lg">DOWNLOAD</button>
-        <p id="msgBox" class="mt-5 font-bold text-sm hidden p-3 rounded-lg shadow-sm"></p>
     </div>
 
-    <!-- Print Section -->
-    <div id="printSection" class="hidden flex-col bg-white border-[12px] border-double border-blue-900 p-6 rounded-2xl relative w-full max-w-3xl h-[287mm]">
+    <!-- Print Section (এডমিনৰ হুবহু কোড আৰু ক্লাছ) -->
+    <div id="printSection" class="hidden flex-col bg-white border-[12px] border-double border-blue-900 p-6 rounded-2xl relative max-w-3xl mx-auto mt-6 mb-6 shadow-2xl">
+        
         <div class="no-print absolute top-[-60px] right-0 flex gap-2">
-            <button onclick="window.print()" class="bg-blue-700 text-white font-bold px-6 py-2 rounded shadow hover:bg-blue-800">Print Admit</button>
+            <button onclick="triggerPrint()" class="bg-blue-700 text-white font-bold px-6 py-2 rounded shadow hover:bg-blue-800">Print Admit</button>
             <button onclick="location.reload()" class="bg-gray-800 text-white font-bold px-6 py-2 rounded shadow hover:bg-gray-900">Back</button>
         </div>
         
@@ -171,16 +154,41 @@
                 if (s.dob !== dob) { throw "Invalid DOB"; }
 
                 if(s.admitStatus === "Released") {
-                    document.getElementById('admitName').innerText = s.studentName; document.getElementById('admitFName').innerText = s.fatherName; document.getElementById('admitClass').innerText = s.class; document.getElementById('admitSec').innerText = s.section; document.getElementById('admitLevel').innerText = s.level; document.getElementById('admitGender').innerText = s.gender; document.getElementById('admitRegNoTxt').innerText = s.regNo;
+                    document.getElementById('admitName').innerText = s.studentName; 
+                    document.getElementById('admitFName').innerText = s.fatherName; 
+                    document.getElementById('admitClass').innerText = s.class; 
+                    document.getElementById('admitSec').innerText = s.section; 
+                    document.getElementById('admitLevel').innerText = s.level; 
+                    document.getElementById('admitGender').innerText = s.gender; 
+                    document.getElementById('admitRegNoTxt').innerText = s.regNo;
                     JsBarcode("#barcode", s.regNo.toString(), {format:"CODE128", width:2.5, height:60, displayValue:false});
                     
-                    document.getElementById('loginSection').style.display = 'none'; document.getElementById('printSection').style.display = 'flex';
+                    document.getElementById('loginSection').parentElement.classList.add('hidden');
+                    let ps = document.getElementById('printSection');
+                    ps.classList.remove('hidden'); 
+                    ps.classList.add('flex');
                 } else {
-                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school."; msg.className = "mt-4 text-orange-800 font-bold block bg-orange-100 p-2 rounded";
+                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school."; 
+                    msg.className = "mt-4 text-orange-800 font-bold block bg-orange-100 p-2 rounded";
                 }
-            } catch(e) { msg.innerText = "Invalid Details or Record Not Found!"; msg.className = "mt-4 text-red-700 font-bold block bg-red-100 p-2 rounded"; }
+            } catch(e) { 
+                msg.innerText = "Invalid Details or Record Not Found!"; 
+                msg.className = "mt-4 text-red-700 font-bold block bg-red-100 p-2 rounded"; 
+            }
             
             btn.innerText = "DOWNLOAD"; btn.disabled = false;
+        }
+
+        // এডমিনৰ দৰেই Print Trigger Logic
+        function triggerPrint() {
+            document.getElementById('ui-layer').classList.add('hidden');
+            let ps = document.getElementById('printSection');
+            ps.classList.add('print-active');
+            
+            window.print();
+            
+            ps.classList.remove('print-active');
+            document.getElementById('ui-layer').classList.remove('hidden');
         }
     </script>
 </body>
