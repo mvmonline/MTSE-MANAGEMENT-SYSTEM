@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore-compat.js"></script>
     <style>
         @media print {
-            @page { size: A4 portrait; margin: 5mm; }
+            @page { size: A4 portrait; margin: 10mm; } /* মাৰ্জিন বঢ়োৱা হৈছে যাতে বৰ্ডাৰ কটা নাযায় */
             html, body { 
                 background: white !important; 
                 margin: 0 !important; 
@@ -20,16 +20,18 @@
             } 
             .no-print, #loginSection, #loader { display: none !important; } 
             
-            /* প্ৰিণ্টৰ বাবে বৰ্ডাৰ আৰু পেজৰ জোখ ১০০% নিশ্চিত কৰা হৈছে */
+            /* বৰ্ডাৰ প্ৰিণ্ট হোৱাটো ১০০% নিশ্চিত কৰিবলৈ নতুন CSS */
             #printSection { 
                 display: flex !important; 
+                flex-direction: column !important;
                 width: 100% !important; 
                 max-width: 100% !important;
-                height: 280mm !important; /* পেজ ফটা ৰোধ কৰিবলৈ জোখটো কমোৱা হৈছে */
-                border: 12px double #1e3a8a !important; /* বৰ্ডাৰটো Forcefully দিয়া হৈছে */
+                height: 270mm !important; /* উচ্চতা কমোৱা হৈছে যাতে এখন পেজত সম্পূৰ্ণ খাপ খায় */
+                border: 10px double #1e3a8a !important; /* বৰ্ডাৰক Forcefully দিয়া হৈছে */
                 border-radius: 16px !important;
                 box-sizing: border-box !important;
                 margin: 0 auto !important; 
+                padding: 24px !important; /* ভিতৰৰ অংশ অলপ এৰি দিয়া হৈছে */
                 box-shadow: none !important; 
                 overflow: hidden !important; 
                 page-break-inside: avoid !important;
@@ -169,25 +171,14 @@
                 if (s.dob !== dob) { throw "Invalid DOB"; }
 
                 if(s.admitStatus === "Released") {
-                    document.getElementById('admitName').innerText = s.studentName; 
-                    document.getElementById('admitFName').innerText = s.fatherName; 
-                    document.getElementById('admitClass').innerText = s.class; 
-                    document.getElementById('admitSec').innerText = s.section; 
-                    document.getElementById('admitLevel').innerText = s.level; 
-                    document.getElementById('admitGender').innerText = s.gender; 
-                    document.getElementById('admitRegNoTxt').innerText = s.regNo;
+                    document.getElementById('admitName').innerText = s.studentName; document.getElementById('admitFName').innerText = s.fatherName; document.getElementById('admitClass').innerText = s.class; document.getElementById('admitSec').innerText = s.section; document.getElementById('admitLevel').innerText = s.level; document.getElementById('admitGender').innerText = s.gender; document.getElementById('admitRegNoTxt').innerText = s.regNo;
                     JsBarcode("#barcode", s.regNo.toString(), {format:"CODE128", width:2.5, height:60, displayValue:false});
                     
-                    document.getElementById('loginSection').style.display = 'none'; 
-                    document.getElementById('printSection').style.display = 'flex';
+                    document.getElementById('loginSection').style.display = 'none'; document.getElementById('printSection').style.display = 'flex';
                 } else {
-                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school."; 
-                    msg.className = "mt-4 text-orange-800 font-bold block bg-orange-100 p-2 rounded";
+                    msg.innerText = "Status is: " + s.admitStatus + ". Please contact school."; msg.className = "mt-4 text-orange-800 font-bold block bg-orange-100 p-2 rounded";
                 }
-            } catch(e) { 
-                msg.innerText = "Invalid Details or Record Not Found!"; 
-                msg.className = "mt-4 text-red-700 font-bold block bg-red-100 p-2 rounded"; 
-            }
+            } catch(e) { msg.innerText = "Invalid Details or Record Not Found!"; msg.className = "mt-4 text-red-700 font-bold block bg-red-100 p-2 rounded"; }
             
             btn.innerText = "DOWNLOAD"; btn.disabled = false;
         }
