@@ -14,7 +14,7 @@
             body { background: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .no-print { display: none !important; }
             #formSection { display: none !important; }
-            #slipSection { display: block !important; width: 100%; height: 287mm; margin: 0; padding: 0; box-shadow: none; border: none; overflow: hidden; page-break-inside: avoid; }
+            #slipSection { display: flex !important; width: 100%; height: 287mm; margin: 0; padding: 0; box-shadow: none; border: none; overflow: hidden; page-break-inside: avoid; }
         }
         input, select { text-transform: uppercase; }
         #email { text-transform: lowercase; }
@@ -74,8 +74,8 @@
         </form>
     </div>
 
-    <!-- Acknowledgement Slip (Perfect A4 Fit) -->
-    <div id="slipSection" class="hidden max-w-4xl mx-auto bg-white p-4 md:p-6 mt-2 print:mt-0 h-[287mm]">
+    <!-- Acknowledgement Slip -->
+    <div id="slipSection" class="hidden max-w-4xl mx-auto bg-white p-4 md:p-6 mt-2 print:mt-0 flex-col h-[287mm]">
         <div class="text-right no-print mb-4">
             <button onclick="window.print()" class="bg-green-600 text-white font-bold py-2 px-6 rounded shadow hover:bg-green-700">Print / Download</button>
         </div>
@@ -103,13 +103,13 @@
                 <div class="w-3/4 pr-2">
                     <h3 class="font-extrabold underline mb-1 text-sm text-blue-900">STUDENT'S DETAILS</h3>
                     <table class="w-full text-[11px] font-bold text-left text-gray-800">
-                        <tr><td class="w-1/3 py-1 text-blue-900">STUDENT NAME</td><td class="text-sm">: <span id="slipName" class="font-extrabold text-black"></span></td></tr>
-                        <tr><td class="py-1 text-blue-900">FATHER'S NAME</td><td>: <span id="slipFName"></span></td></tr>
-                        <tr><td class="py-1 text-blue-900">GENDER</td><td>: <span id="slipGender"></span></td></tr>
-                        <tr><td class="py-1 text-blue-900">CLASS</td><td>: <span id="slipClass"></span></td></tr>
-                        <tr><td class="py-1 text-blue-900">SECTION</td><td>: <span id="slipSec"></span></td></tr>
-                        <tr><td class="py-1 text-blue-900">DATE OF BIRTH</td><td>: <span id="slipDob"></span></td></tr>
-                        <tr><td class="py-1 text-blue-900">LEVEL</td><td>: <span id="slipLevel"></span></td></tr>
+                        <tr><td class="w-1/3 py-1 text-blue-900 border-b border-gray-300">STUDENT NAME</td><td class="text-sm border-b border-gray-300">: <span id="slipName" class="font-extrabold text-black"></span></td></tr>
+                        <tr><td class="py-1 text-blue-900 border-b border-gray-300">FATHER'S NAME</td><td class="border-b border-gray-300">: <span id="slipFName"></span></td></tr>
+                        <tr><td class="py-1 text-blue-900 border-b border-gray-300">GENDER</td><td class="border-b border-gray-300">: <span id="slipGender"></span></td></tr>
+                        <tr><td class="py-1 text-blue-900 border-b border-gray-300">CLASS</td><td class="border-b border-gray-300">: <span id="slipClass"></span></td></tr>
+                        <tr><td class="py-1 text-blue-900 border-b border-gray-300">SECTION</td><td class="border-b border-gray-300">: <span id="slipSec"></span></td></tr>
+                        <tr><td class="py-1 text-blue-900 border-b border-gray-300">DATE OF BIRTH</td><td class="border-b border-gray-300">: <span id="slipDob"></span></td></tr>
+                        <tr><td class="py-1 text-blue-900 border-b border-gray-300">LEVEL</td><td class="border-b border-gray-300">: <span id="slipLevel"></span></td></tr>
                         <tr><td class="py-1 text-blue-900">PHONE NO</td><td>: <span id="slipPhone"></span></td></tr>
                     </table>
                 </div>
@@ -144,7 +144,7 @@
             </div>
 
             <div class="flex-1 flex justify-between items-start text-[11px] font-bold text-gray-800">
-                <div class="space-y-1.5 w-3/4">
+                <div class="space-y-2 w-3/4">
                     <p class="text-sm">Registration No : <span id="receiptRegNo" class="font-extrabold text-black"></span></p>
                     <p class="text-sm border-b border-gray-100 pb-1">Student's Name : <span id="receiptName" class="font-extrabold text-black uppercase"></span></p>
                     <p>Class : <span id="receiptClass"></span></p>
@@ -152,7 +152,7 @@
                     <p>Level : <span id="receiptLevel"></span></p>
                     <p>Phone No : <span id="receiptPhone"></span></p>
                     
-                    <div class="mt-4 bg-gray-100 p-2 rounded border border-gray-300">
+                    <div class="mt-4 bg-gray-100 p-2 rounded border border-gray-300 w-5/6">
                         <p class="text-[12px] font-extrabold text-black mb-1">Fees : _____________________</p>
                         <p class="text-[12px] font-extrabold text-black mb-1">Payment mode : Cash / Online</p>
                         <p class="text-[12px] font-extrabold text-black">Payment Date : _____________________</p>
@@ -277,6 +277,7 @@
         function generateSlip(data, regNo, subDate) {
             document.getElementById('formSection').classList.add('hidden');
             document.getElementById('slipSection').classList.remove('hidden');
+            document.getElementById('slipSection').classList.add('flex');
             
             let downDate = new Date().toLocaleString();
             document.getElementById('slipRegNo').innerText = regNo;
